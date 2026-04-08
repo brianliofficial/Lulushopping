@@ -138,7 +138,7 @@ export function CartDrawer({ open, step, onStepChange, onClose }: Props) {
                             </button>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 text-sm text-white/85">
-                            <span className="tabular-nums">NT$ {line.unitPrice} ×</span>
+                            <span className="tabular-nums">£{line.unitPrice} ×</span>
                             <label className="sr-only" htmlFor={`cart-qty-${line.productId}`}>
                               {t("cart.qty")}
                             </label>
@@ -160,7 +160,7 @@ export function CartDrawer({ open, step, onStepChange, onClose }: Props) {
                               {t("cart.remaining", { n: line.maxQty })}
                             </span>
                             <span className="ml-auto font-semibold tabular-nums text-lulu-accent">
-                              NT${" "}
+                              £
                               {Math.round(line.quantity * line.unitPrice * 100) / 100}
                             </span>
                           </div>
@@ -174,7 +174,7 @@ export function CartDrawer({ open, step, onStepChange, onClose }: Props) {
                 <div className="mt-6 border-t border-white/10 pt-4">
                   <div className="mb-4 flex justify-between text-white">
                     <span className="text-white/80">{t("cart.subtotal")}</span>
-                    <span className="font-semibold tabular-nums">NT$ {subtotal}</span>
+                    <span className="font-semibold tabular-nums">£{subtotal}</span>
                   </div>
                   <button
                     type="button"

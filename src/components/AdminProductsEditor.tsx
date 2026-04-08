@@ -20,6 +20,7 @@ import { CSS } from "@dnd-kit/utilities";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
+import { useAdminSecret } from "@/components/AdminAuthProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -223,7 +224,7 @@ export function AdminProductsEditor() {
   const [loading, setLoading] = useState(true);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveErr, setSaveErr] = useState<string | null>(null);
-  const [adminSecret, setAdminSecret] = useState("");
+  const { adminSecret, setAdminSecret } = useAdminSecret();
   const [saving, setSaving] = useState(false);
 
   const sensors = useSensors(

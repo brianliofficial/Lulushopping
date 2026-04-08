@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { OrderLinePayload } from "@/lib/types";
 import type { OrderRow } from "@/lib/orders-supabase";
+import { useAdminSecret } from "@/components/AdminAuthProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -15,6 +16,13 @@ function formatItems(items: OrderLinePayload[] | unknown): string {
         `${l.name} ×${l.quantity}（${l.lineTotal}）`,
     )
     .join("；");
+}
+
+function formatDelivery(o: OrderRow): string {
+  const parts = [o.address_line1, o.address_line2, o.city, o.postcode].filter(
+    (s) => String(s ?? "").trim(),
+  );
+  return parts.length > 0 ? parts.join(", ") : "—";
 }
 
 function resolveAdminError(
@@ -35,7 +43,7 @@ export function AdminOrdersPanel() {
   const { t, locale } = useI18n();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [adminSecret, setAdminSecret] = useState("");
+  const { adminSecret, setAdminSecret } = useAdminSecret();
   const secretRef = useRef(adminSecret);
   secretRef.current = adminSecret;
 
@@ -238,12 +246,13 @@ export function AdminOrdersPanel() {
         <p className="text-white/60">{t("adminOrders.empty")}</p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full min-w-[720px] text-left text-sm text-white">
+          <table className="w-full min-w-[900px] text-left text-sm text-white">
             <thead className="bg-lulu-bg/90 text-xs uppercase text-white/90">
               <tr>
                 <th className="px-3 py-2">{t("adminOrders.thTime")}</th>
                 <th className="px-3 py-2">{t("adminOrders.thName")}</th>
                 <th className="px-3 py-2">{t("adminOrders.thPhone")}</th>
+                <th className="px-3 py-2">{t("adminOrders.thAddress")}</th>
                 <th className="px-3 py-2">{t("adminOrders.thLast5")}</th>
                 <th className="px-3 py-2">{t("adminOrders.thItems")}</th>
                 <th className="px-3 py-2">{t("adminOrders.thTotal")}</th>
@@ -259,6 +268,9 @@ export function AdminOrdersPanel() {
                   </td>
                   <td className="px-3 py-2">{o.customer_name}</td>
                   <td className="px-3 py-2 tabular-nums">{o.phone}</td>
+                  <td className="max-w-[220px] px-3 py-2 text-xs text-white/85">
+                    {formatDelivery(o)}
+                  </td>
                   <td className="px-3 py-2 tabular-nums">{o.transfer_last5}</td>
                   <td className="max-w-[240px] px-3 py-2 text-xs text-white/85">
                     {formatItems(o.items)}

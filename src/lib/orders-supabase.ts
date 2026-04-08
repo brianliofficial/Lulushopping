@@ -7,6 +7,10 @@ export type OrderItemsV1 = {
   customerName: string;
   phone: string;
   transferLast5: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  postcode: string;
   lines: OrderLinePayload[];
 };
 
@@ -15,6 +19,10 @@ export type OrderRow = {
   customer_name: string;
   phone: string;
   transfer_last5: string;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  postcode: string;
   items: OrderLinePayload[];
   total: number;
   paid: boolean;
@@ -63,6 +71,10 @@ function parseStoredOrderItems(raw: unknown): {
   customerName: string;
   phone: string;
   transferLast5: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  postcode: string;
 } {
   if (raw !== null && typeof raw === "object" && !Array.isArray(raw)) {
     const o = raw as Record<string, unknown>;
@@ -72,6 +84,10 @@ function parseStoredOrderItems(raw: unknown): {
         customerName: String(o.customerName ?? "").trim(),
         phone: String(o.phone ?? "").trim(),
         transferLast5: String(o.transferLast5 ?? "").trim(),
+        addressLine1: String(o.addressLine1 ?? "").trim(),
+        addressLine2: String(o.addressLine2 ?? "").trim(),
+        city: String(o.city ?? "").trim(),
+        postcode: String(o.postcode ?? "").trim(),
       };
     }
   }
@@ -81,6 +97,10 @@ function parseStoredOrderItems(raw: unknown): {
       customerName: "",
       phone: "",
       transferLast5: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      postcode: "",
     };
   }
   return {
@@ -88,6 +108,10 @@ function parseStoredOrderItems(raw: unknown): {
     customerName: "",
     phone: "",
     transferLast5: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    postcode: "",
   };
 }
 
@@ -107,6 +131,10 @@ export async function insertOrder(order: OrderPayload): Promise<string> {
     customerName: order.customerName,
     phone: order.phone,
     transferLast5: order.transferLast5,
+    addressLine1: order.addressLine1,
+    addressLine2: order.addressLine2,
+    city: order.city,
+    postcode: order.postcode,
     lines: order.items,
   };
   const { data, error } = await sb
@@ -145,6 +173,10 @@ export async function fetchOrdersList(): Promise<OrderRow[]> {
       customer_name: parsed.customerName,
       phone: parsed.phone,
       transfer_last5: parsed.transferLast5,
+      address_line1: parsed.addressLine1,
+      address_line2: parsed.addressLine2,
+      city: parsed.city,
+      postcode: parsed.postcode,
       items: parsed.lines,
       total: Number(r.total),
       paid: r.paid,

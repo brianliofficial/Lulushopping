@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { fetchFoodlistProducts } from "@/lib/foodlist-supabase";
 import type { OrderLinePayload, OrderPayload } from "@/lib/types";
+import { normalizeUkMobile, isValidUkMobile } from "@/lib/phone-uk";
+import { isValidUkPostcodeFormat, normalizeUkPostcode } from "@/lib/postcode-uk";
 import {
   getSoldQuantitiesForProducts,
   insertOrder,
@@ -11,6 +13,10 @@ type Body = {
   customerName?: string;
   phone?: string;
   transferLast5?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  postcode?: string;
   items?: Array<{
     name?: string;
     productId?: string;
@@ -19,11 +25,6 @@ type Body = {
     lineTotal?: number;
   }>;
 };
-
-function isValidPhone(s: string): boolean {
-  const t = s.replace(/\s/g, "");
-  return /^[\d+()-]{8,20}$/.test(t);
-}
 
 function isValidLast5(s: string): boolean {
   return /^\d{5}$/.test(s.trim());
@@ -41,8 +42,12 @@ export async function POST(request: Request) {
   }
 
   const customerName = String(body.customerName ?? "").trim();
-  const phone = String(body.phone ?? "").trim();
+  const phoneRaw = String(body.phone ?? "").trim();
   const transferLast5 = String(body.transferLast5 ?? "").trim();
+  const addressLine1 = String(body.addressLine1 ?? "").trim();
+  const addressLine2 = String(body.addressLine2 ?? "").trim();
+  const city = String(body.city ?? "").trim();
+  const postcodeRaw = String(body.postcode ?? "").trim();
   const rawItems = body.items;
 
   if (!customerName || customerName.length > 100) {
@@ -51,15 +56,47 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (!phone || !isValidPhone(phone)) {
+  if (!isValidUkMobile(phoneRaw)) {
     return NextResponse.json(
-      { error: "Invalid phone", code: "INVALID_PHONE" },
+      { error: "Invalid UK mobile", code: "INVALID_PHONE" },
       { status: 400 },
     );
   }
+  const phone = normalizeUkMobile(phoneRaw)!;
   if (!isValidLast5(transferLast5)) {
     return NextResponse.json(
       { error: "Invalid transfer digits", code: "INVALID_TRANSFER_LAST5" },
+      { status: 400 },
+    );
+  }
+  if (!addressLine1 || addressLine1.length > 200) {
+    return NextResponse.json(
+      { error: "Address required", code: "ADDRESS_REQUIRED" },
+      { status: 400 },
+    );
+  }
+  if (addressLine2.length > 200) {
+    return NextResponse.json(
+      { error: "Address line 2 too long", code: "INVALID_ADDRESS" },
+      { status: 400 },
+    );
+  }
+  if (!city || city.length > 100) {
+    return NextResponse.json(
+      { error: "City required", code: "CITY_REQUIRED" },
+      { status: 400 },
+    );
+  }
+  if (!postcodeRaw || !isValidUkPostcodeFormat(postcodeRaw)) {
+    return NextResponse.json(
+      { error: "Invalid postcode", code: "INVALID_POSTCODE" },
+      { status: 400 },
+    );
+  }
+  const postcode = normalizeUkPostcode(postcodeRaw);
+  if (!isValidUkPostcodeFormat(postcode)) {
+    return NextResponse.json(
+      { error: "Invalid postcode", code: "INVALID_POSTCODE" },
       { status: 400 },
     );
   }
@@ -156,6 +193,10 @@ export async function POST(request: Request) {
     customerName,
     phone,
     transferLast5,
+    addressLine1,
+    addressLine2,
+    city,
+    postcode,
     items,
     total,
     createdAt: new Date().toISOString(),

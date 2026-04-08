@@ -1,3 +1,4 @@
+import { AdminAuthProvider } from "@/components/AdminAuthProvider";
 import { AdminOrdersPanel } from "@/components/AdminOrdersPanel";
 
 export const metadata = {
@@ -9,7 +10,9 @@ export default function AdminOrdersPage() {
   return (
     <div className="min-h-full bg-lulu-bg">
       <main className="mx-auto max-w-6xl px-4 py-10">
-        <AdminOrdersPanel />
+        <AdminAuthProvider>
+          <AdminOrdersPanel />
+        </AdminAuthProvider>
       </main>
     </div>
   );

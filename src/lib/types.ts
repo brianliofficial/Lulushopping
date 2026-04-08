@@ -30,6 +30,10 @@ export type OrderPayload = {
   customerName: string;
   phone: string;
   transferLast5: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  postcode: string;
   items: OrderLinePayload[];
   total: number;
   createdAt: string;

@@ -124,7 +124,7 @@ export function ProductList({
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-2 text-sm text-white/85">
-                <span className="tabular-nums">NT$ {p.price} ×</span>
+                <span className="tabular-nums">£{p.price} ×</span>
                 <label className="sr-only" htmlFor={`qty-${p.id}`}>
                   {t("productList.qtySrOnly", { name: p.name })}
                 </label>
