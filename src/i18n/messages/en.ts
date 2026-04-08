@@ -37,6 +37,9 @@ export const en = {
     noDescription: "No description",
     qtySrOnly: "{{name}} quantity",
     max: "/ max {{max}}",
+    remaining: "/ {{max}} left",
+    soldOut: "Sold out",
+    soldOutBadge: "Sold out",
     addToCart: "Add to cart",
   },
   errors: {
@@ -44,7 +47,7 @@ export const en = {
       FETCH_FAILED:
         "Could not load products. Please try again later.",
       MISSING_SUPABASE:
-        "Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local, then run the SQL in supabase/migrations/001_init_foodlist_orders.sql in Supabase.",
+        "Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (local: .env.local; Vercel: Project → Settings → Environment Variables), then run supabase/migrations/001_init_foodlist_orders.sql in Supabase.",
     },
     order: {
       INVALID_JSON: "Invalid request.",
@@ -53,6 +56,10 @@ export const en = {
       INVALID_TRANSFER_LAST5: "Transfer reference must be exactly 5 digits.",
       EMPTY_CART: "Your cart is empty.",
       NO_VALID_ITEMS: "No valid line items.",
+      INSUFFICIENT_STOCK:
+        "Not enough stock left. Refresh the page and try again.",
+      UNKNOWN_PRODUCT:
+        "The order contains an unknown product. Refresh and try again.",
       MISSING_SUPABASE: "Server is not configured for Supabase.",
       ORDER_FAILED: "Could not place the order. Please try again.",
       GENERIC: "Something went wrong. Please try again.",
@@ -73,7 +80,7 @@ export const en = {
       NO_ADMIN_SECRET:
         "Set PRODUCTS_ADMIN_SECRET in production and enter the same password in the admin UI.",
       MISSING_SUPABASE:
-        "Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local.",
+        "Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (local: .env.local; Vercel: Project → Settings → Environment Variables).",
     },
   },
   cart: {
@@ -84,6 +91,7 @@ export const en = {
     remove: "Remove",
     qty: "Quantity",
     max: "/ max {{max}}",
+    remaining: "Remaining: {{n}}",
     subtotal: "Subtotal",
     checkout: "Checkout",
     thanks: "Thank you for your order!",
@@ -147,7 +155,7 @@ export const en = {
   adminProducts: {
     pageTitle: "Products",
     pageSubtitle:
-      "Edit names, details, prices, and stock limits; order matches the storefront.",
+      "Edit names, details, prices, and total sellable quantity; order matches the storefront. Remaining stock decreases with orders; at zero, the item shows sold out.",
     introP1:
       "Drag ⋮⋮ to change homepage order. Click Edit to change fields, then Done to sync automatically. Use Add product, then Confirm to add. If you only reordered without opening Edit, click Save list.",
     introP2:
@@ -162,7 +170,7 @@ export const en = {
     draftTitle: "New product — confirm to sync",
     nameReq: "Product name (required)",
     price: "Price (NT$)",
-    maxQty: "Quantity limit",
+    maxQty: "Total sellable quantity (stock cap)",
     imageUrl: "Image URL (optional)",
     detail: "Details",
     confirmAdd: "Confirm and sync",
@@ -173,7 +181,7 @@ export const en = {
     emptyHint: 'No products yet. Click "Add product".',
     rowName: "Product name",
     rowPrice: "Price (NT$)",
-    rowMax: "Quantity limit",
+    rowMax: "Total sellable (orders reduce; zero = sold out)",
     rowImage: "Image URL (optional)",
     rowDetail: "Product details",
     placeholderName: "Name",

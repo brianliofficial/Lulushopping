@@ -42,6 +42,7 @@ export function CheckoutForm({ onSuccess, onCancel }: Props) {
     setSubmitting(true);
     try {
       const items = lines.map((l) => ({
+        productId: l.productId,
         name: l.name,
         quantity: l.quantity,
         unitPrice: l.unitPrice,

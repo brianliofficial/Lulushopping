@@ -1,15 +1,15 @@
 import { HomeShell } from "@/components/HomeShell";
-import { fetchFoodlistProducts } from "@/lib/foodlist-supabase";
+import { fetchStorefrontProducts } from "@/lib/foodlist-supabase";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   let errorCode: "FETCH_FAILED" | null = null;
   let configErrorCode: "MISSING_SUPABASE" | null = null;
-  let products: Awaited<ReturnType<typeof fetchFoodlistProducts>> = [];
+  let products: Awaited<ReturnType<typeof fetchStorefrontProducts>> = [];
 
   try {
-    products = await fetchFoodlistProducts();
+    products = await fetchStorefrontProducts();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
     if (msg === "MISSING_SUPABASE") {

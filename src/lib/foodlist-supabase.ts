@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { getSupabaseErrorText } from "@/lib/supabase/errors";
+import { getSoldQuantitiesForProducts } from "@/lib/orders-supabase";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
@@ -93,6 +94,16 @@ export async function fetchFoodlistProducts(): Promise<Product[]> {
     .order("sort_order", { ascending: true });
   if (error) throwDb(error);
   return (data ?? []).map((r) => rowToProduct(r as FoodlistRow));
+}
+
+/** 首頁用：max_qty 為「可賣總量上限」，依訂單扣減後得到剩餘可購數 */
+export async function fetchStorefrontProducts(): Promise<Product[]> {
+  const base = await fetchFoodlistProducts();
+  const sold = await getSoldQuantitiesForProducts(base);
+  return base.map((p) => ({
+    ...p,
+    maxQty: Math.max(0, p.maxQty - (sold[p.id] ?? 0)),
+  }));
 }
 
 export async function replaceFoodlist(products: Product[]): Promise<void> {

@@ -22,6 +22,8 @@ export type OrderLinePayload = {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  /** foodlist.id，用於扣庫存與彙總已訂數量 */
+  productId?: string;
 };
 
 export type OrderPayload = {

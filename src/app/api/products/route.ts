@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json(
         {
           error:
-            "請設定 NEXT_PUBLIC_SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY。",
+            "請設定 NEXT_PUBLIC_SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY（Vercel：Project → Settings → Environment Variables；本機：.env.local）。",
           code: "MISSING_SUPABASE",
           products: [],
         },

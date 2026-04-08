@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
+import { fetchFoodlistProducts } from "@/lib/foodlist-supabase";
 import type { OrderLinePayload, OrderPayload } from "@/lib/types";
-import { insertOrder } from "@/lib/orders-supabase";
+import {
+  getSoldQuantitiesForProducts,
+  insertOrder,
+  normalizeProductNameForMatch,
+} from "@/lib/orders-supabase";
 
 type Body = {
   customerName?: string;
@@ -8,6 +13,7 @@ type Body = {
   transferLast5?: string;
   items?: Array<{
     name?: string;
+    productId?: string;
     quantity?: number;
     unitPrice?: number;
     lineTotal?: number;
@@ -68,6 +74,7 @@ export async function POST(request: Request) {
   let total = 0;
   for (const line of rawItems) {
     const name = String(line.name ?? "").trim();
+    const productIdRaw = String(line.productId ?? "").trim();
     const quantity = Number(line.quantity);
     const unitPrice = Number(line.unitPrice);
     const lineTotal = Number(line.lineTotal);
@@ -77,7 +84,9 @@ export async function POST(request: Request) {
       Number.isFinite(lineTotal) && lineTotal >= 0
         ? lineTotal
         : Math.round(quantity * unitPrice * 100) / 100;
-    items.push({ name, quantity, unitPrice, lineTotal: lt });
+    const row: OrderLinePayload = { name, quantity, unitPrice, lineTotal: lt };
+    if (productIdRaw) row.productId = productIdRaw;
+    items.push(row);
     total += lt;
   }
 
@@ -89,6 +98,59 @@ export async function POST(request: Request) {
   }
 
   total = Math.round(total * 100) / 100;
+
+  let catalog: Awaited<ReturnType<typeof fetchFoodlistProducts>>;
+  let sold: Record<string, number>;
+  try {
+    catalog = await fetchFoodlistProducts();
+    sold = await getSoldQuantitiesForProducts(catalog);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg === "MISSING_SUPABASE") {
+      return NextResponse.json(
+        { error: "Supabase not configured", code: "MISSING_SUPABASE" },
+        { status: 503 },
+      );
+    }
+    console.error(e);
+    return NextResponse.json(
+      { error: "Stock check failed", code: "ORDER_FAILED" },
+      { status: 500 },
+    );
+  }
+
+  const nameToId = new Map<string, string>();
+  for (const p of catalog) {
+    const k = normalizeProductNameForMatch(p.name);
+    if (!nameToId.has(k)) nameToId.set(k, p.id);
+  }
+
+  const need: Record<string, number> = {};
+  for (const it of items) {
+    const pid =
+      it.productId && catalog.some((c) => c.id === it.productId)
+        ? it.productId
+        : (nameToId.get(normalizeProductNameForMatch(it.name)) ?? "");
+    if (!pid) {
+      return NextResponse.json(
+        { error: "Unknown product", code: "UNKNOWN_PRODUCT" },
+        { status: 400 },
+      );
+    }
+    if (!it.productId || it.productId !== pid) it.productId = pid;
+    need[pid] = (need[pid] ?? 0) + it.quantity;
+  }
+
+  for (const pid of Object.keys(need)) {
+    const cap = catalog.find((p) => p.id === pid)?.maxQty ?? 0;
+    const taken = sold[pid] ?? 0;
+    if (taken + need[pid] > cap) {
+      return NextResponse.json(
+        { error: "Insufficient stock", code: "INSUFFICIENT_STOCK" },
+        { status: 400 },
+      );
+    }
+  }
 
   const order: OrderPayload = {
     customerName,

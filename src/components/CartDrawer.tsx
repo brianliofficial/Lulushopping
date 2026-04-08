@@ -157,7 +157,7 @@ export function CartDrawer({ open, step, onStepChange, onClose }: Props) {
                               className="w-16 rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-white"
                             />
                             <span className="text-white/60">
-                              {t("cart.max", { max: line.maxQty })}
+                              {t("cart.remaining", { n: line.maxQty })}
                             </span>
                             <span className="ml-auto font-semibold tabular-nums text-lulu-accent">
                               NT${" "}

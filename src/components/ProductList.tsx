@@ -85,6 +85,7 @@ export function ProductList({
       {products.map((p) => {
         const q = getQty(p.id);
         const max = p.maxQty;
+        const soldOut = max < 1;
         return (
           <li
             key={p.id}
@@ -132,26 +133,29 @@ export function ProductList({
                   type="number"
                   min={1}
                   max={max}
-                  value={q}
+                  value={soldOut ? 0 : q}
+                  disabled={soldOut}
                   onChange={(e) =>
                     setQty(
                       p.id,
                       Math.min(max, Math.max(1, Number(e.target.value) || 1)),
                     )
                   }
-                  className="w-16 rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-white focus:border-lulu-accent focus:outline-none focus:ring-1 focus:ring-lulu-accent"
+                  className="w-16 rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-white focus:border-lulu-accent focus:outline-none focus:ring-1 focus:ring-lulu-accent disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <span className="text-white/60">
-                  {t("productList.max", { max })}
+                  {soldOut
+                    ? t("productList.soldOutBadge")
+                    : t("productList.remaining", { max })}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => addProduct(p, q)}
-                disabled={max < 1}
+                disabled={soldOut}
                 className="w-full rounded-full bg-lulu-accent py-3 text-sm font-semibold text-lulu-bg shadow transition hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lulu-accent"
               >
-                {t("productList.addToCart")}
+                {soldOut ? t("productList.soldOut") : t("productList.addToCart")}
               </button>
             </div>
           </li>

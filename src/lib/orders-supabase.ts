@@ -22,6 +22,42 @@ export type OrderRow = {
   created_at: string;
 };
 
+export function normalizeProductNameForMatch(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** 依所有訂單彙總各商品已購數量（含舊訂單：僅有名稱時以名稱對應目前商品） */
+export async function getSoldQuantitiesForProducts(
+  catalog: { id: string; name: string }[],
+): Promise<Record<string, number>> {
+  const nameToId = new Map<string, string>();
+  for (const p of catalog) {
+    const k = normalizeProductNameForMatch(p.name);
+    if (!nameToId.has(k)) nameToId.set(k, p.id);
+  }
+
+  const sb = createServiceRoleClient();
+  const { data, error } = await sb.from("orders").select("items");
+  if (error) throw error;
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const parsed = parseStoredOrderItems((row as { items: unknown }).items);
+    for (const line of parsed.lines) {
+      const q = Math.floor(Number(line.quantity));
+      if (!Number.isFinite(q) || q < 1) continue;
+
+      let pid = String((line as { productId?: string }).productId ?? "").trim();
+      if (!pid || !catalog.some((c) => c.id === pid)) {
+        pid = nameToId.get(normalizeProductNameForMatch(line.name)) ?? "";
+      }
+      if (!pid) continue;
+      counts[pid] = (counts[pid] ?? 0) + q;
+    }
+  }
+  return counts;
+}
+
 function parseStoredOrderItems(raw: unknown): {
   lines: OrderLinePayload[];
   customerName: string;

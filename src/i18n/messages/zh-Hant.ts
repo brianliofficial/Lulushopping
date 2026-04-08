@@ -39,13 +39,16 @@ export const zhHant: Messages = {
     noDescription: "無詳細說明",
     qtySrOnly: "{{name}} 數量",
     max: "／ 最多 {{max}}",
+    remaining: "／ 剩餘 {{max}}",
+    soldOut: "已售完",
+    soldOutBadge: "已售完",
     addToCart: "加入購物車",
   },
   errors: {
     home: {
       FETCH_FAILED: "無法讀取商品，請稍後再試。",
       MISSING_SUPABASE:
-        "請在 .env.local 設定 NEXT_PUBLIC_SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY，並在 Supabase 執行 supabase/migrations/001_init_foodlist_orders.sql。",
+        "請設定 NEXT_PUBLIC_SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY（本機：.env.local；Vercel：Project → Settings → Environment Variables），並在 Supabase 執行 supabase/migrations/001_init_foodlist_orders.sql。",
     },
     order: {
       INVALID_JSON: "請求格式錯誤。",
@@ -54,6 +57,8 @@ export const zhHant: Messages = {
       INVALID_TRANSFER_LAST5: "轉帳末五碼須為 5 位數字。",
       EMPTY_CART: "購物車是空的。",
       NO_VALID_ITEMS: "沒有有效品項。",
+      INSUFFICIENT_STOCK: "庫存不足，請重新整理頁面後再試。",
+      UNKNOWN_PRODUCT: "訂單含無法辨識的商品，請重新整理後再試。",
       MISSING_SUPABASE: "伺服器未設定 Supabase。",
       ORDER_FAILED: "無法建立訂單。",
       GENERIC: "送出失敗，請稍後再試。",
@@ -74,7 +79,7 @@ export const zhHant: Messages = {
       NO_ADMIN_SECRET:
         "正式環境請設定 PRODUCTS_ADMIN_SECRET，並在管理頁輸入相同密碼。",
       MISSING_SUPABASE:
-        "請設定 NEXT_PUBLIC_SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY。",
+        "請設定 NEXT_PUBLIC_SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY（本機：.env.local；Vercel：Project → Settings → Environment Variables）。",
     },
   },
   cart: {
@@ -85,6 +90,7 @@ export const zhHant: Messages = {
     remove: "移除",
     qty: "數量",
     max: "／ 最多 {{max}}",
+    remaining: "目前剩餘 {{n}}",
     subtotal: "小計",
     checkout: "前往結帳",
     thanks: "感謝您的訂購！",
@@ -147,7 +153,7 @@ export const zhHant: Messages = {
   adminProducts: {
     pageTitle: "商品管理",
     pageSubtitle:
-      "維護商品名稱、詳細資料、定價與數量上限；順序即首頁顯示順序。",
+      "維護商品名稱、詳細資料、定價與可賣總量；順序即首頁顯示順序。首頁會依訂單自動扣減剩餘數量，售完顯示已售完。",
     introP1:
       "拖曳左側 ⋮⋮ 可調整首頁顯示順序。每列請先按 編輯 修改欄位，按 完成 即會自動同步至 Supabase。按新增商品後按 確認新增並同步 寫入新列。若只調整排序未開啟編輯，請按 儲存目前清單。",
     introP2:
@@ -162,7 +168,7 @@ export const zhHant: Messages = {
     draftTitle: "新增商品 — 填寫後按確認即同步",
     nameReq: "商品名稱（必填）",
     price: "定價（NT$）",
-    maxQty: "限制數量",
+    maxQty: "可賣總量（庫存上限）",
     imageUrl: "圖片網址（選填）",
     detail: "詳細資料",
     confirmAdd: "確認新增並同步",
@@ -173,7 +179,7 @@ export const zhHant: Messages = {
     emptyHint: "尚無商品，請按「新增商品」。",
     rowName: "商品名稱",
     rowPrice: "定價（NT$）",
-    rowMax: "限制數量（可賣上限）",
+    rowMax: "可賣總量（訂單會扣減；歸零即售完）",
     rowImage: "圖片網址（選填）",
     rowDetail: "商品詳細資料",
     placeholderName: "名稱",
