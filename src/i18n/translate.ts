@@ -5,6 +5,13 @@ import { zhHant } from "./messages/zh-Hant";
 export type Locale = "zh-Hant" | "en";
 
 const STORAGE_KEY = "lulu-locale";
+/** Readable on the server (layout) so SSR and first client paint match. */
+export const LOCALE_COOKIE = "lulu-locale";
+
+export function parseLocaleCookie(raw: string | undefined): Locale {
+  if (raw === "en") return "en";
+  return "zh-Hant";
+}
 
 export function getStoredLocale(): Locale | null {
   if (typeof window === "undefined") return null;
@@ -20,6 +27,14 @@ export function getStoredLocale(): Locale | null {
 export function persistLocale(locale: Locale): void {
   try {
     localStorage.setItem(STORAGE_KEY, locale);
+  } catch {
+    /* ignore */
+  }
+  try {
+    if (typeof document !== "undefined") {
+      const v = locale === "en" ? "en" : "zh-Hant";
+      document.cookie = `${LOCALE_COOKIE}=${encodeURIComponent(v)};path=/;max-age=31536000;SameSite=Lax`;
+    }
   } catch {
     /* ignore */
   }

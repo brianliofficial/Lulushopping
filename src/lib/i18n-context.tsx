@@ -24,15 +24,24 @@ type I18nContextValue = {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("zh-Hant");
+export function I18nProvider({
+  children,
+  initialLocale,
+}: {
+  children: React.ReactNode;
+  initialLocale: Locale;
+}) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const stored = getStoredLocale();
-    if (stored) setLocaleState(stored);
+    if (stored && stored !== initialLocale) {
+      setLocaleState(stored);
+      persistLocale(stored);
+    }
     setReady(true);
-  }, []);
+  }, [initialLocale]);
 
   useEffect(() => {
     if (!ready) return;

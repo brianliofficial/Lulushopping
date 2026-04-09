@@ -18,7 +18,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { Product } from "@/lib/types";
 import { useAdminSecret } from "@/components/AdminAuthProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -32,6 +38,7 @@ function emptyProduct(): Product {
     price: 0,
     maxQty: 0,
     imageUrl: "",
+    saleLimited: false,
   };
 }
 
@@ -164,6 +171,33 @@ function SortableRow({
             )}
           </div>
           <div className="sm:col-span-2">
+            <label className="mb-0.5 block text-xs text-white/70">
+              {t("adminProducts.rowProductKind")}
+            </label>
+            {editing ? (
+              <select
+                value={product.saleLimited === true ? "limited" : "normal"}
+                onChange={(e) =>
+                  onChange(product.id, {
+                    saleLimited: e.target.value === "limited",
+                  })
+                }
+                className="w-full rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
+              >
+                <option value="normal">{t("adminProducts.productKindNormal")}</option>
+                <option value="limited">
+                  {t("adminProducts.productKindLimited")}
+                </option>
+              </select>
+            ) : (
+              <p className="rounded-lg border border-transparent bg-white/5 px-2 py-1.5 text-sm text-white/90">
+                {product.saleLimited === true
+                  ? t("adminProducts.productKindLimited")
+                  : t("adminProducts.productKindNormal")}
+              </p>
+            )}
+          </div>
+          <div className="sm:col-span-2">
             <label className="mb-0.5 block text-xs text-white/70">{t("adminProducts.rowImage")}</label>
             {editing ? (
               <input
@@ -232,7 +266,13 @@ export function AdminProductsEditor() {
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveErr, setSaveErr] = useState<string | null>(null);
   const { adminSecret, setAdminSecret } = useAdminSecret();
+  const [pwdDraft, setPwdDraft] = useState("");
+  const [pwdLocked, setPwdLocked] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useLayoutEffect(() => {
+    if (adminSecret.trim()) setPwdLocked(true);
+  }, [adminSecret]);
   const [countdownStartInput, setCountdownStartInput] = useState("");
   const [countdownEndInput, setCountdownEndInput] = useState("");
   const [countdownBusy, setCountdownBusy] = useState(false);
@@ -476,7 +516,7 @@ export function AdminProductsEditor() {
       maxQty: Math.max(0, Math.floor(Number(draft.maxQty) || 0)),
       imageUrl: (draft.imageUrl ?? "").trim(),
     };
-    const next = [...products, row];
+    const next = [row, ...products];
     await persistList(next);
     setDraft(null);
   }
@@ -598,20 +638,6 @@ export function AdminProductsEditor() {
         >
           {t("adminProducts.addProduct")}
         </button>
-        <div className="min-w-[180px] flex-1">
-          <label htmlFor="admin-secret" className="mb-0.5 block text-xs text-white/60">
-            {t("adminProducts.adminPassword")}
-          </label>
-          <input
-            id="admin-secret"
-            type="password"
-            autoComplete="off"
-            value={adminSecret}
-            onChange={(e) => setAdminSecret(e.target.value)}
-            className="w-full rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
-            placeholder={t("adminProducts.passwordPh")}
-          />
-        </div>
         <button
           type="button"
           disabled={saving || draft !== null}
@@ -632,6 +658,58 @@ export function AdminProductsEditor() {
         >
           {t("adminProducts.homeLink")}
         </Link>
+      </div>
+
+      <div className="w-full rounded-lg border border-white/10 bg-lulu-surface/30 p-3">
+        <label htmlFor="admin-secret" className="mb-0.5 block text-xs text-white/60">
+          {t("adminProducts.adminPassword")}
+        </label>
+        {pwdLocked ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <p
+              id="admin-secret"
+              className="flex-1 rounded-lg border border-white/15 bg-lulu-bg/50 px-2 py-2 text-sm text-white/50"
+            >
+              {t("adminProducts.passwordLockedMask")}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setPwdLocked(false);
+                setPwdDraft("");
+              }}
+              className="shrink-0 rounded-full border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+            >
+              {t("adminProducts.passwordChange")}
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-end gap-2">
+            <input
+              id="admin-secret"
+              type="password"
+              autoComplete="off"
+              value={pwdDraft}
+              onChange={(e) => setPwdDraft(e.target.value)}
+              className="min-w-[140px] flex-1 rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
+              placeholder={t("adminProducts.passwordPh")}
+            />
+            <button
+              type="button"
+              disabled={!pwdDraft.trim()}
+              onClick={() => {
+                const v = pwdDraft.trim();
+                if (!v) return;
+                setAdminSecret(v);
+                setPwdLocked(true);
+                setPwdDraft("");
+              }}
+              className="rounded-full bg-lulu-accent px-4 py-1.5 text-xs font-semibold text-lulu-bg hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {t("adminProducts.passwordConfirm")}
+            </button>
+          </div>
+        )}
       </div>
 
       {draft ? (
@@ -687,6 +765,30 @@ export function AdminProductsEditor() {
                 }
                 className="w-full rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
               />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-0.5 block text-xs text-white/70">
+                {t("adminProducts.rowProductKind")}
+              </label>
+              <select
+                value={draft.saleLimited === true ? "limited" : "normal"}
+                onChange={(e) =>
+                  setDraft((d) =>
+                    d
+                      ? {
+                          ...d,
+                          saleLimited: e.target.value === "limited",
+                        }
+                      : d,
+                  )
+                }
+                className="w-full rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
+              >
+                <option value="normal">{t("adminProducts.productKindNormal")}</option>
+                <option value="limited">
+                  {t("adminProducts.productKindLimited")}
+                </option>
+              </select>
             </div>
             <div className="sm:col-span-2">
               <label className="mb-0.5 block text-xs text-white/70">{t("adminProducts.imageUrl")}</label>

@@ -1,5 +1,6 @@
 import { HomeShell } from "@/components/HomeShell";
 import { fetchStorefrontProducts } from "@/lib/foodlist-supabase";
+import { getSalePhase } from "@/lib/sale-window";
 import { getSaleWindow } from "@/lib/site-settings-supabase";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,18 @@ export default async function HomePage() {
   let configErrorCode: "MISSING_SUPABASE" | null = null;
   let products: Awaited<ReturnType<typeof fetchStorefrontProducts>> = [];
   const saleWindow = await getSaleWindow();
+  const requestTime = Date.now();
+  const initialSalePhase = getSalePhase(
+    saleWindow.countdownStartsAt,
+    saleWindow.countdownEndsAt,
+    requestTime,
+  );
+  const sAt = saleWindow.countdownStartsAt;
+  const eAt = saleWindow.countdownEndsAt;
+  const showCountdownBanner =
+    Boolean(sAt?.trim() && eAt?.trim()) &&
+    !Number.isNaN(new Date(eAt!).getTime()) &&
+    requestTime < new Date(eAt!).getTime();
 
   try {
     products = await fetchStorefrontProducts();
@@ -27,6 +40,8 @@ export default async function HomePage() {
       errorCode={errorCode}
       configErrorCode={configErrorCode}
       saleWindow={saleWindow}
+      initialSalePhase={initialSalePhase}
+      showCountdownBanner={showCountdownBanner}
     />
   );
 }

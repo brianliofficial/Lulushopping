@@ -10,8 +10,7 @@ export const zhHant: Messages = {
   },
   adminGate: {
     title: "請先輸入管理密碼",
-    body:
-      "請輸入與主機環境變數 PRODUCTS_ADMIN_SECRET 相同的管理密碼，用於儲存商品與訂單操作。",
+    body: "請輸入管理密碼，以管理商品與訂單。",
     passwordLabel: "管理密碼",
     passwordPh: "密碼",
     continue: "繼續",
@@ -25,6 +24,8 @@ export const zhHant: Messages = {
     orders: "訂單管理",
     products: "商品管理",
     cart: "購物車",
+    cartClosedHint: "購物車僅在設定的開賣時間內可開啟。",
+    cartClosedAria: "購物車 — 非開賣時間無法開啟",
   },
   hero: {
     tagline: "Love it · Eat it",
@@ -57,6 +58,10 @@ export const zhHant: Messages = {
     addToCart: "加入購物車",
     addToCartClosed: "目前未開放",
     outsideSaleWindow: "只有在設定的開賣時間內才能訂購。",
+    preparing: "準備中",
+    saleWindowEnded: "此商品已銷售結束",
+    beforeSaleHint: "開賣尚未開始，僅可瀏覽，無法加入購物車。",
+    afterSaleHint: "開賣期間已結束，無法再訂購此商品。",
   },
   errors: {
     home: {
@@ -96,8 +101,7 @@ export const zhHant: Messages = {
       EMPTY_PRODUCTS:
         "沒有有效商品：每一筆都需填「商品名稱」，且不可全部為空。",
       UNAUTHORIZED: "未授權。",
-      NO_ADMIN_SECRET:
-        "正式環境請設定 PRODUCTS_ADMIN_SECRET，並在管理頁輸入相同密碼。",
+      NO_ADMIN_SECRET: "伺服器尚未設定管理密碼，或管理頁密碼不正確。",
       MISSING_SUPABASE:
         "請設定 NEXT_PUBLIC_SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY（本機：.env.local；Vercel：Project → Settings → Environment Variables）。",
     },
@@ -114,7 +118,7 @@ export const zhHant: Messages = {
     subtotal: "小計",
     checkout: "前往結帳",
     checkoutDisabledHint:
-      "非開賣時間無法結帳，您仍可查看購物車內容。",
+      "購物車內含「倒數限量商品」時，僅在開賣時間內可結帳；一般商品不受此限。",
     thanks: "感謝您的訂購！",
     thanksDetail:
       "我們已收到訂單並寫入資料庫，將依轉帳末五碼與您聯繫。",
@@ -159,10 +163,12 @@ export const zhHant: Messages = {
     pageTitle: "訂單管理",
     pageSubtitle:
       '訂單資料來自 Supabase 資料表 <code>orders</code>。',
-    intro:
-      '正式環境請輸入與 <code>PRODUCTS_ADMIN_SECRET</code> 相同的管理密碼後按「重新載入」。',
-    adminPassword: "管理密碼",
-    passwordPh: "本機開發可留空",
+    intro: "請輸入管理密碼後按「重新載入」。",
+    adminPassword: "管理密碼（請輸入後按確認）",
+    passwordPh: "輸入後按「確認」",
+    passwordConfirm: "確認",
+    passwordChange: "變更",
+    passwordLockedMask: "············",
     reload: "重新載入",
     deleteAll: "刪除全部訂單",
     deletingAll: "刪除中…",
@@ -196,11 +202,16 @@ export const zhHant: Messages = {
       "維護商品名稱、詳細資料、定價與可賣總量；順序即首頁顯示順序。首頁會依訂單自動扣減剩餘數量，售完顯示已售完。",
     introP1:
       "拖曳左側 ⋮⋮ 可調整首頁顯示順序。每列請先按 編輯 修改欄位，按 完成 即會自動同步至 Supabase。按新增商品後按 確認新增並同步 寫入新列。若只調整排序未開啟編輯，請按 儲存目前清單。",
-    introP2:
-      '正式環境或 <code>next start</code> 需填管理密碼（與 <code>PRODUCTS_ADMIN_SECRET</code> 相同）。顧客訂單請至「訂單管理」。',
+    introP2: "顧客訂單請至「訂單管理」。",
     addProduct: "新增商品",
-    adminPassword: "管理密碼（正式／production 必填）",
-    passwordPh: "本機 next dev 可留空",
+    adminPassword: "管理密碼（請輸入後按確認）",
+    passwordPh: "輸入後按「確認」",
+    passwordConfirm: "確認",
+    passwordChange: "變更",
+    passwordLockedMask: "············",
+    rowProductKind: "類型",
+    productKindNormal: "一般商品",
+    productKindLimited: "倒數限量商品",
     saveList: "儲存目前清單",
     saving: "同步中…",
     ordersLink: "訂單管理",
@@ -232,7 +243,7 @@ export const zhHant: Messages = {
     countdownStart: "開始時間（本地）",
     countdownEnd: "結束時間（本地）",
     countdownHelp:
-      "僅在此時間內顧客可加入購物車與結帳。資料存於 Supabase <code>site_settings</code>。清除兩者則不限時間。",
+      "「倒數限量商品」僅在此時間內可購買；「一般商品」不受影響。清除兩個時間即關閉開賣視窗。",
     countdownSave: "儲存倒數",
     countdownClear: "清除倒數",
     countdownSaving: "儲存中…",

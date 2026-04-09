@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/types";
 import type { SaleWindowIso } from "@/lib/site-settings-supabase";
-import { isShoppingAllowed } from "@/lib/sale-window";
+import { useCart } from "@/lib/cart-context";
+import {
+  getSalePhase,
+  type SalePhase,
+} from "@/lib/sale-window";
 import {
   CartDrawer,
   type CartStep,
@@ -22,6 +26,9 @@ type Props = {
   errorCode: HomeErrorCode;
   configErrorCode: HomeConfigErrorCode;
   saleWindow: SaleWindowIso;
+  /** Computed on the server so first client paint matches SSR (avoids hydration mismatch). */
+  initialSalePhase: SalePhase;
+  showCountdownBanner: boolean;
 };
 
 export function HomeShell({
@@ -29,29 +36,44 @@ export function HomeShell({
   errorCode,
   configErrorCode,
   saleWindow,
+  initialSalePhase,
+  showCountdownBanner,
 }: Props) {
+  const { lines } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
   const [cartStep, setCartStep] = useState<CartStep>("cart");
   const { t } = useI18n();
   const { countdownStartsAt: sAt, countdownEndsAt: eAt } = saleWindow;
 
-  const [shoppingAllowed, setShoppingAllowed] = useState(() =>
-    isShoppingAllowed(sAt, eAt),
-  );
+  const [salePhase, setSalePhase] = useState<SalePhase>(initialSalePhase);
+  const [bannerVisible, setBannerVisible] = useState(showCountdownBanner);
 
   useEffect(() => {
-    const tick = () =>
-      setShoppingAllowed(isShoppingAllowed(sAt, eAt, Date.now()));
+    const tick = () => {
+      const now = Date.now();
+      setSalePhase(getSalePhase(sAt, eAt, now));
+      const show =
+        Boolean(sAt?.trim() && eAt?.trim()) &&
+        !Number.isNaN(new Date(eAt!).getTime()) &&
+        now < new Date(eAt!).getTime();
+      setBannerVisible(show);
+    };
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, [sAt, eAt]);
 
+  const checkoutAllowed = useMemo(() => {
+    const hasLimited = lines.some((l) => l.saleLimited === true);
+    if (!hasLimited) return true;
+    return salePhase === "during";
+  }, [lines, salePhase]);
+
   useEffect(() => {
-    if (!shoppingAllowed && cartStep === "checkout") {
+    if (!checkoutAllowed && cartStep === "checkout") {
       setCartStep("cart");
     }
-  }, [shoppingAllowed, cartStep]);
+  }, [checkoutAllowed, cartStep]);
 
   function openCart() {
     setCartStep("cart");
@@ -63,20 +85,15 @@ export function HomeShell({
     setCartStep("cart");
   }
 
-  const showBanner =
-    Boolean(sAt?.trim() && eAt?.trim()) &&
-    !Number.isNaN(new Date(eAt!).getTime()) &&
-    Date.now() < new Date(eAt!).getTime();
-
   return (
     <div className="flex flex-1 flex-col">
-      <Header onOpenCart={openCart} />
+      <Header onOpenCart={openCart} cartOpenAllowed={true} />
       <main
         id="main-content"
         className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-8"
       >
         <Hero />
-        {showBanner && sAt && eAt ? (
+        {bannerVisible && sAt && eAt ? (
           <CountdownBanner startsAtIso={sAt} endsAtIso={eAt} />
         ) : null}
         <div>
@@ -93,7 +110,7 @@ export function HomeShell({
           loading={false}
           errorCode={errorCode}
           configErrorCode={configErrorCode}
-          shoppingAllowed={shoppingAllowed}
+          salePhase={salePhase}
         />
       </main>
       <CartDrawer
@@ -101,7 +118,7 @@ export function HomeShell({
         step={cartStep}
         onStepChange={setCartStep}
         onClose={closeCart}
-        shoppingAllowed={shoppingAllowed}
+        shoppingAllowed={checkoutAllowed}
       />
     </div>
   );

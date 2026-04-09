@@ -6,6 +6,8 @@ export type Product = {
   maxQty: number;
   /** 對應 Supabase foodlist.product_pic */
   imageUrl?: string;
+  /** 倒數限量：僅在全域開賣視窗 salePhase === during 可購；未設定視窗視同已結束 */
+  saleLimited?: boolean;
 };
 
 export type CartLine = {
@@ -15,6 +17,8 @@ export type CartLine = {
   maxQty: number;
   quantity: number;
   imageUrl?: string;
+  /** Copied from product when adding to cart */
+  saleLimited?: boolean;
 };
 
 export type OrderLinePayload = {

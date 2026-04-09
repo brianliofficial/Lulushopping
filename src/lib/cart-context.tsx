@@ -31,15 +31,20 @@ function loadFromStorage(): CartLine[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as CartLine[];
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (l) =>
-        l &&
-        typeof l.productId === "string" &&
-        typeof l.name === "string" &&
-        typeof l.unitPrice === "number" &&
-        typeof l.maxQty === "number" &&
-        typeof l.quantity === "number",
-    );
+    return parsed
+      .filter(
+        (l) =>
+          l &&
+          typeof l.productId === "string" &&
+          typeof l.name === "string" &&
+          typeof l.unitPrice === "number" &&
+          typeof l.maxQty === "number" &&
+          typeof l.quantity === "number",
+      )
+      .map((l) => ({
+        ...l,
+        saleLimited: l.saleLimited === true,
+      }));
   } catch {
     return [];
   }
@@ -90,6 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             unitPrice: product.price,
             maxQty: product.maxQty,
             quantity: nextQty,
+            saleLimited: product.saleLimited === true,
             ...(img ? { imageUrl: img } : {}),
           },
         ];
@@ -101,6 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       next[idx] = {
         ...line,
         quantity: nextQty,
+        saleLimited: product.saleLimited === true,
         ...(img ? { imageUrl: img } : {}),
       };
       return next;

@@ -9,7 +9,7 @@ import {
   normalizeProductNameForMatch,
 } from "@/lib/orders-supabase";
 import { getSaleWindow } from "@/lib/site-settings-supabase";
-import { isShoppingAllowed } from "@/lib/sale-window";
+import { getSalePhase } from "@/lib/sale-window";
 
 type Body = {
   customerName?: string;
@@ -109,14 +109,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const w = await getSaleWindow();
-  if (!isShoppingAllowed(w.countdownStartsAt, w.countdownEndsAt, Date.now())) {
-    return NextResponse.json(
-      { error: "Sale is not open", code: "SALE_WINDOW_CLOSED" },
-      { status: 403 },
-    );
-  }
-
   const items: OrderLinePayload[] = [];
   let total = 0;
   for (const line of rawItems) {
@@ -195,6 +187,26 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Insufficient stock", code: "INSUFFICIENT_STOCK" },
         { status: 400 },
+      );
+    }
+  }
+
+  const windowRow = await getSaleWindow();
+  const phase = getSalePhase(
+    windowRow.countdownStartsAt,
+    windowRow.countdownEndsAt,
+    Date.now(),
+  );
+  for (const it of items) {
+    if (!it.productId) continue;
+    const prod = catalog.find((p) => p.id === it.productId);
+    if (prod?.saleLimited === true && phase !== "during") {
+      return NextResponse.json(
+        {
+          error: "Limited products are only sold during the active sale window",
+          code: "SALE_WINDOW_CLOSED",
+        },
+        { status: 403 },
       );
     }
   }

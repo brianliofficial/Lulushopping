@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { OrderLinePayload } from "@/lib/types";
 import type { OrderRow } from "@/lib/orders-supabase";
 import { useAdminSecret } from "@/components/AdminAuthProvider";
@@ -49,6 +55,12 @@ export function AdminOrdersPanel() {
 
   const [err, setErr] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [pwdDraft, setPwdDraft] = useState("");
+  const [pwdLocked, setPwdLocked] = useState(false);
+
+  useLayoutEffect(() => {
+    if (adminSecret.trim()) setPwdLocked(true);
+  }, [adminSecret]);
 
   const authHeaders = useCallback((): HeadersInit => {
     const h: HeadersInit = {};
@@ -191,20 +203,6 @@ export function AdminOrdersPanel() {
 
       <div className="flex flex-wrap items-end gap-3">
         <LanguageSwitcher />
-        <div className="min-w-[200px] flex-1">
-          <label htmlFor="orders-admin-secret" className="mb-0.5 block text-xs text-white/60">
-            {t("adminOrders.adminPassword")}
-          </label>
-          <input
-            id="orders-admin-secret"
-            type="password"
-            autoComplete="off"
-            value={adminSecret}
-            onChange={(e) => setAdminSecret(e.target.value)}
-            className="w-full rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
-            placeholder={t("adminOrders.passwordPh")}
-          />
-        </div>
         <button
           type="button"
           onClick={() => void load()}
@@ -232,6 +230,58 @@ export function AdminOrdersPanel() {
         >
           {t("adminOrders.homeLink")}
         </Link>
+      </div>
+
+      <div className="w-full rounded-lg border border-white/10 bg-lulu-surface/30 p-3">
+        <label htmlFor="orders-admin-secret" className="mb-0.5 block text-xs text-white/60">
+          {t("adminOrders.adminPassword")}
+        </label>
+        {pwdLocked ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <p
+              id="orders-admin-secret"
+              className="flex-1 rounded-lg border border-white/15 bg-lulu-bg/50 px-2 py-2 text-sm text-white/50"
+            >
+              {t("adminOrders.passwordLockedMask")}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setPwdLocked(false);
+                setPwdDraft("");
+              }}
+              className="shrink-0 rounded-full border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+            >
+              {t("adminOrders.passwordChange")}
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-end gap-2">
+            <input
+              id="orders-admin-secret"
+              type="password"
+              autoComplete="off"
+              value={pwdDraft}
+              onChange={(e) => setPwdDraft(e.target.value)}
+              className="min-w-[140px] flex-1 rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
+              placeholder={t("adminOrders.passwordPh")}
+            />
+            <button
+              type="button"
+              disabled={!pwdDraft.trim()}
+              onClick={() => {
+                const v = pwdDraft.trim();
+                if (!v) return;
+                setAdminSecret(v);
+                setPwdLocked(true);
+                setPwdDraft("");
+              }}
+              className="rounded-full bg-lulu-accent px-4 py-1.5 text-xs font-semibold text-lulu-bg hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {t("adminOrders.passwordConfirm")}
+            </button>
+          </div>
+        )}
       </div>
 
       {err ? (

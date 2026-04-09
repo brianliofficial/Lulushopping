@@ -5,22 +5,52 @@ import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n-context";
 import type { HomeConfigErrorCode, HomeErrorCode } from "@/components/HomeShell";
+import {
+  effectiveLimitedSalePhase,
+  type SalePhase,
+} from "@/lib/sale-window";
 
 type Props = {
   products: Product[];
   loading?: boolean;
   errorCode?: HomeErrorCode | null;
   configErrorCode?: HomeConfigErrorCode | null;
-  /** When false, add-to-cart is disabled (outside sale window). */
-  shoppingAllowed?: boolean;
+  salePhase?: SalePhase;
 };
+
+function lineState(p: Product, salePhase: SalePhase) {
+  const soldOut = p.maxQty < 1;
+  if (p.saleLimited === true) {
+    const eff = effectiveLimitedSalePhase(salePhase);
+    const canAdd = eff === "during" && !soldOut;
+    let cta: string;
+    if (soldOut) cta = "soldOut";
+    else if (eff === "before") cta = "preparing";
+    else if (eff === "during") cta = "add";
+    else cta = "ended";
+    const hint =
+      !soldOut && eff === "before"
+        ? "before"
+        : !soldOut && eff === "after"
+          ? "after"
+          : null;
+    return { soldOut, addBlocked: !canAdd, cta, hint };
+  }
+  const canAdd = !soldOut;
+  return {
+    soldOut,
+    addBlocked: !canAdd,
+    cta: soldOut ? "soldOut" : "add",
+    hint: null as "before" | "after" | null,
+  };
+}
 
 export function ProductList({
   products,
   loading,
   errorCode,
   configErrorCode,
-  shoppingAllowed = true,
+  salePhase = "unrestricted",
 }: Props) {
   const { addProduct } = useCart();
   const { t } = useI18n();
@@ -87,9 +117,21 @@ export function ProductList({
     <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {products.map((p) => {
         const q = getQty(p.id);
-        const max = p.maxQty;
-        const soldOut = max < 1;
-        const addBlocked = soldOut || !shoppingAllowed;
+        const { soldOut, addBlocked, cta, hint } = lineState(p, salePhase);
+        const ctaLabel =
+          cta === "soldOut"
+            ? t("productList.soldOut")
+            : cta === "preparing"
+              ? t("productList.preparing")
+              : cta === "ended"
+                ? t("productList.saleWindowEnded")
+                : t("productList.addToCart");
+        const phaseHint =
+          hint === "before"
+            ? t("productList.beforeSaleHint")
+            : hint === "after"
+              ? t("productList.afterSaleHint")
+              : null;
         return (
           <li
             key={p.id}
@@ -136,13 +178,16 @@ export function ProductList({
                   id={`qty-${p.id}`}
                   type="number"
                   min={1}
-                  max={max}
+                  max={p.maxQty}
                   value={soldOut ? 0 : q}
                   disabled={addBlocked}
                   onChange={(e) =>
                     setQty(
                       p.id,
-                      Math.min(max, Math.max(1, Number(e.target.value) || 1)),
+                      Math.min(
+                        p.maxQty,
+                        Math.max(1, Number(e.target.value) || 1),
+                      ),
                     )
                   }
                   className="w-16 rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-white focus:border-lulu-accent focus:outline-none focus:ring-1 focus:ring-lulu-accent disabled:cursor-not-allowed disabled:opacity-50"
@@ -150,11 +195,11 @@ export function ProductList({
                 <span className="text-white/60">
                   {soldOut
                     ? t("productList.soldOutBadge")
-                    : t("productList.remaining", { max })}
+                    : t("productList.remaining", { max: p.maxQty })}
                 </span>
               </div>
-              {!shoppingAllowed && !soldOut ? (
-                <p className="text-xs text-amber-200/90">{t("productList.outsideSaleWindow")}</p>
+              {phaseHint ? (
+                <p className="text-xs text-amber-200/90">{phaseHint}</p>
               ) : null}
               <button
                 type="button"
@@ -162,11 +207,7 @@ export function ProductList({
                 disabled={addBlocked}
                 className="w-full rounded-full bg-lulu-accent py-3 text-sm font-semibold text-lulu-bg shadow transition hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lulu-accent"
               >
-                {soldOut
-                  ? t("productList.soldOut")
-                  : !shoppingAllowed
-                    ? t("productList.addToCartClosed")
-                    : t("productList.addToCart")}
+                {ctaLabel}
               </button>
             </div>
           </li>

@@ -8,8 +8,7 @@ export const en = {
   },
   adminGate: {
     title: "Admin password required",
-    body:
-      "Enter the same password as PRODUCTS_ADMIN_SECRET in your hosting settings. It is used to save products and manage orders.",
+    body: "Enter your admin password to manage products and orders.",
     passwordLabel: "Admin password",
     passwordPh: "Password",
     continue: "Continue",
@@ -23,6 +22,8 @@ export const en = {
     orders: "Orders",
     products: "Products",
     cart: "Cart",
+    cartClosedHint: "The cart opens only during the scheduled sale window.",
+    cartClosedAria: "Cart — unavailable outside the sale window",
   },
   hero: {
     tagline: "Love it · Eat it",
@@ -56,6 +57,10 @@ export const en = {
     addToCartClosed: "Not available yet",
     outsideSaleWindow:
       "Ordering is only available during the scheduled sale window.",
+    preparing: "Preparing",
+    saleWindowEnded: "This sale has ended",
+    beforeSaleHint: "The sale has not started yet — you can browse, but you cannot add items yet.",
+    afterSaleHint: "The sale period is over — this item is no longer available to order.",
   },
   errors: {
     home: {
@@ -100,7 +105,7 @@ export const en = {
         "No valid products: each row needs a name, and the list cannot be all empty.",
       UNAUTHORIZED: "Unauthorized.",
       NO_ADMIN_SECRET:
-        "Set PRODUCTS_ADMIN_SECRET in production and enter the same password in the admin UI.",
+        "Server admin password is not configured, or the password you entered is wrong.",
       MISSING_SUPABASE:
         "Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (local: .env.local; Vercel: Project → Settings → Environment Variables).",
     },
@@ -117,7 +122,7 @@ export const en = {
     subtotal: "Subtotal",
     checkout: "Checkout",
     checkoutDisabledHint:
-      "Checkout is unavailable outside the scheduled sale hours. You can still review your cart.",
+      "If your cart includes limited-time sale products, you can only check out during the active sale window.",
     thanks: "Thank you for your order!",
     thanksDetail:
       "We have received your order and will contact you using your transfer reference.",
@@ -163,10 +168,12 @@ export const en = {
     pageTitle: "Orders",
     pageSubtitle:
       "Order data comes from the Supabase <code>orders</code> table.",
-    intro:
-      'In production, enter the same password as <code>PRODUCTS_ADMIN_SECRET</code> and click Reload.',
-    adminPassword: "Admin password",
-    passwordPh: "Optional in local dev",
+    intro: "Enter your admin password and click Reload.",
+    adminPassword: "Admin password (enter and confirm)",
+    passwordPh: "Type password, then Confirm",
+    passwordConfirm: "Confirm",
+    passwordChange: "Change",
+    passwordLockedMask: "············",
     reload: "Reload",
     deleteAll: "Delete all orders",
     deletingAll: "Deleting…",
@@ -201,11 +208,16 @@ export const en = {
       "Edit names, details, prices, and total sellable quantity; order matches the storefront. Remaining stock decreases with orders; at zero, the item shows sold out.",
     introP1:
       "Drag ⋮⋮ to change homepage order. Click Edit to change fields, then Done to sync automatically. Use Add product, then Confirm to add. If you only reordered without opening Edit, click Save list.",
-    introP2:
-      'In production or <code>next start</code>, enter the admin password (same as PRODUCTS_ADMIN_SECRET). Customer orders: go to Orders.',
+    introP2: "Customer orders: go to Orders.",
     addProduct: "Add product",
-    adminPassword: "Admin password (required in production)",
-    passwordPh: "Optional in next dev",
+    adminPassword: "Admin password (enter and confirm)",
+    passwordPh: "Type password, then Confirm",
+    passwordConfirm: "Confirm",
+    passwordChange: "Change",
+    passwordLockedMask: "············",
+    rowProductKind: "Type",
+    productKindNormal: "Normal product",
+    productKindLimited: "Limited-time sale product",
     saveList: "Save list",
     saving: "Syncing…",
     ordersLink: "Orders",
@@ -237,7 +249,7 @@ export const en = {
     countdownStart: "Start (local time)",
     countdownEnd: "End (local time)",
     countdownHelp:
-      "During this window only, customers can add to cart and check out. Stored in Supabase <code>site_settings</code>. Clear both to allow ordering anytime.",
+      "Limited-time sale products can only be bought during this interval. Normal products are not affected. Clear both times to turn off the countdown window.",
     countdownSave: "Save countdown",
     countdownClear: "Clear",
     countdownSaving: "Saving…",

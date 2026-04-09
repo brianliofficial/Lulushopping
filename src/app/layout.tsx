@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Fredoka, Noto_Sans_TC } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { SkipLink } from "@/components/SkipLink";
+import { LOCALE_COOKIE, parseLocaleCookie } from "@/i18n/translate";
 import "./globals.css";
 
 const fredoka = Fredoka({
@@ -21,19 +23,25 @@ export const metadata: Metadata = {
   description: "Taiwan handmade meals — Love it · Eat it",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jar = await cookies();
+  const initialLocale = parseLocaleCookie(
+    jar.get(LOCALE_COOKIE)?.value ?? undefined,
+  );
+  const htmlLang = initialLocale === "en" ? "en" : "zh-Hant";
+
   return (
     <html
-      lang="zh-Hant"
+      lang={htmlLang}
       suppressHydrationWarning
       className={`${fredoka.variable} ${notoSansTc.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-lulu-bg font-sans text-white">
-        <Providers>
+        <Providers initialLocale={initialLocale}>
           <SkipLink />
           {children}
         </Providers>

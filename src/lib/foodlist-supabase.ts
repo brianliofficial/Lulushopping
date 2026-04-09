@@ -44,6 +44,7 @@ type FoodlistRow = {
   price: string | number | null;
   max_qty: number | null;
   product_pic?: string | null;
+  sale_limited?: boolean | null;
 };
 
 function rowToProduct(row: FoodlistRow): Product {
@@ -57,6 +58,7 @@ function rowToProduct(row: FoodlistRow): Product {
     price: Number(row.price ?? 0),
     maxQty: Math.max(0, Math.floor(Number(row.max_qty ?? 0))),
     imageUrl: typeof pic === "string" && pic.trim() ? pic.trim() : undefined,
+    saleLimited: row.sale_limited === true,
   };
 }
 
@@ -83,6 +85,7 @@ function rowPayload(p: Product, sortOrder: number) {
     product_limit: maxQty,
     sort_order: sortOrder,
     product_pic: pic || null,
+    sale_limited: p.saleLimited === true,
   };
 }
 
@@ -90,7 +93,7 @@ export async function fetchFoodlistProducts(): Promise<Product[]> {
   const sb = createServiceRoleClient();
   const { data, error } = await sb
     .from("foodlist")
-    .select("id,description,price,max_qty,sort_order,product_pic")
+    .select("id,description,price,max_qty,sort_order,product_pic,sale_limited")
     .order("sort_order", { ascending: true });
   if (error) throwDb(error);
   return (data ?? []).map((r) => rowToProduct(r as FoodlistRow));
@@ -164,6 +167,7 @@ export function validateProductsPayload(body: unknown): Product[] {
     const price = Number(r.price);
     const maxQty = Math.floor(Number(r.maxQty));
     const imageUrl = String(r.imageUrl ?? r.image_url ?? "").trim();
+    const saleLimited = Boolean(r.saleLimited ?? r.sale_limited);
     out.push({
       id: id || randomUUID(),
       name,
@@ -171,6 +175,7 @@ export function validateProductsPayload(body: unknown): Product[] {
       price: Number.isFinite(price) && price >= 0 ? price : 0,
       maxQty: Number.isFinite(maxQty) && maxQty >= 0 ? maxQty : 0,
       imageUrl,
+      saleLimited,
     });
   }
   return out;
