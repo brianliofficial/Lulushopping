@@ -12,9 +12,17 @@ type Props = {
   step: CartStep;
   onStepChange: (step: CartStep) => void;
   onClose: () => void;
+  /** False when sale window is closed (before start or after end). */
+  shoppingAllowed?: boolean;
 };
 
-export function CartDrawer({ open, step, onStepChange, onClose }: Props) {
+export function CartDrawer({
+  open,
+  step,
+  onStepChange,
+  onClose,
+  shoppingAllowed = true,
+}: Props) {
   const { lines, subtotal, setLineQuantity, removeLine } = useCart();
   const { t } = useI18n();
 
@@ -94,6 +102,7 @@ export function CartDrawer({ open, step, onStepChange, onClose }: Props) {
             <CheckoutForm
               onSuccess={() => onStepChange("done")}
               onCancel={() => onStepChange("cart")}
+              checkoutDisabled={!shoppingAllowed}
             />
           ) : (
             <>
@@ -176,10 +185,19 @@ export function CartDrawer({ open, step, onStepChange, onClose }: Props) {
                     <span className="text-white/80">{t("cart.subtotal")}</span>
                     <span className="font-semibold tabular-nums">£{subtotal}</span>
                   </div>
+                  {!shoppingAllowed ? (
+                    <p
+                      className="mb-3 rounded-lg border border-amber-500/35 bg-amber-950/30 p-3 text-center text-sm text-amber-100/95"
+                      role="status"
+                    >
+                      {t("cart.checkoutDisabledHint")}
+                    </p>
+                  ) : null}
                   <button
                     type="button"
+                    disabled={!shoppingAllowed}
                     onClick={() => onStepChange("checkout")}
-                    className="w-full rounded-full bg-lulu-accent py-3 text-sm font-semibold text-lulu-bg shadow hover:bg-lulu-accent-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lulu-accent"
+                    className="w-full rounded-full bg-lulu-accent py-3 text-sm font-semibold text-lulu-bg shadow hover:bg-lulu-accent-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lulu-accent disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {t("cart.checkout")}
                   </button>

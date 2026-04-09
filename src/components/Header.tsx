@@ -16,8 +16,8 @@ export function Header({ onOpenCart }: Props) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-lulu-bg/95 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 min-[600px]:flex-row min-[600px]:flex-wrap min-[600px]:items-center min-[600px]:justify-between min-[600px]:gap-4">
+        <div className="flex min-w-0 w-full items-center gap-3 min-[600px]:w-auto min-[600px]:flex-1">
           <Link href="/" className="flex shrink-0 items-center gap-3 rounded-lg outline-offset-4 hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-lulu-accent">
             <Image
               src="/logo.png"
@@ -35,7 +35,7 @@ export function Header({ onOpenCart }: Props) {
             </div>
           </Link>
         </div>
-        <nav className="flex flex-wrap items-center gap-2">
+        <nav className="flex w-full flex-wrap items-center gap-2 min-[600px]:w-auto min-[600px]:justify-end">
           <LanguageSwitcher />
           <Link
             href="/admin/orders"

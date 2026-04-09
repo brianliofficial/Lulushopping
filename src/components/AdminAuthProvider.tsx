@@ -31,14 +31,12 @@ function AdminPasswordOverlay() {
   const { t } = useI18n();
   const { adminSecret, setAdminSecret } = useAdminSecret();
   const [input, setInput] = useState("");
-  const isProd = process.env.NODE_ENV === "production";
 
   useEffect(() => {
-    if (!isProd || adminSecret.trim()) return;
+    if (adminSecret.trim()) return;
     setInput("");
-  }, [isProd, adminSecret]);
+  }, [adminSecret]);
 
-  if (!isProd) return null;
   if (adminSecret.trim()) return null;
 
   return (
@@ -123,15 +121,11 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       <AdminPasswordOverlay />
       <div
         className={
-          process.env.NODE_ENV === "production" && !adminSecret.trim()
+          !adminSecret.trim()
             ? "pointer-events-none min-h-[50vh] opacity-40"
             : undefined
         }
-        aria-hidden={
-          process.env.NODE_ENV === "production" && !adminSecret.trim()
-            ? true
-            : undefined
-        }
+        aria-hidden={!adminSecret.trim() ? true : undefined}
       >
         {children}
       </div>

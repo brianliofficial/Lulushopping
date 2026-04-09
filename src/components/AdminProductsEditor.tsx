@@ -35,6 +35,13 @@ function emptyProduct(): Product {
   };
 }
 
+function isoToDatetimeLocalValue(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function resolveProductApiError(
   code: string | undefined,
   raw: string | undefined,
@@ -226,6 +233,11 @@ export function AdminProductsEditor() {
   const [saveErr, setSaveErr] = useState<string | null>(null);
   const { adminSecret, setAdminSecret } = useAdminSecret();
   const [saving, setSaving] = useState(false);
+  const [countdownStartInput, setCountdownStartInput] = useState("");
+  const [countdownEndInput, setCountdownEndInput] = useState("");
+  const [countdownBusy, setCountdownBusy] = useState(false);
+  const [countdownMsg, setCountdownMsg] = useState<string | null>(null);
+  const [countdownErr, setCountdownErr] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -260,6 +272,116 @@ export function AdminProductsEditor() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!adminSecret.trim()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const headers: HeadersInit = {};
+        if (adminSecret.trim()) {
+          headers.Authorization = `Bearer ${adminSecret.trim()}`;
+        }
+        const res = await fetch("/api/admin/site-settings", { headers });
+        const data = (await res.json().catch(() => ({}))) as {
+          countdownStartsAt?: string | null;
+          countdownEndsAt?: string | null;
+        };
+        if (cancelled) return;
+        if (!res.ok) {
+          setCountdownErr(t("adminProducts.countdownLoadErr"));
+          return;
+        }
+        setCountdownStartInput(
+          data.countdownStartsAt
+            ? isoToDatetimeLocalValue(data.countdownStartsAt)
+            : "",
+        );
+        setCountdownEndInput(
+          data.countdownEndsAt
+            ? isoToDatetimeLocalValue(data.countdownEndsAt)
+            : "",
+        );
+        setCountdownErr(null);
+      } catch {
+        if (!cancelled) setCountdownErr(t("adminProducts.countdownLoadErr"));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [adminSecret, t]);
+
+  async function persistSaleWindow(payload: {
+    countdownStartsAt: string | null;
+    countdownEndsAt: string | null;
+  }) {
+    setCountdownBusy(true);
+    setCountdownMsg(null);
+    setCountdownErr(null);
+    const headers: HeadersInit = { "Content-Type": "application/json" };
+    if (adminSecret.trim()) {
+      headers.Authorization = `Bearer ${adminSecret.trim()}`;
+    }
+    try {
+      const res = await fetch("/api/admin/site-settings", {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        countdownStartsAt?: string | null;
+        countdownEndsAt?: string | null;
+      };
+      if (!res.ok) {
+        setCountdownErr(t("adminProducts.countdownSaveErr"));
+        return;
+      }
+      setCountdownStartInput(
+        data.countdownStartsAt
+          ? isoToDatetimeLocalValue(data.countdownStartsAt)
+          : "",
+      );
+      setCountdownEndInput(
+        data.countdownEndsAt ? isoToDatetimeLocalValue(data.countdownEndsAt) : "",
+      );
+      setCountdownMsg(t("adminProducts.countdownOk"));
+    } catch {
+      setCountdownErr(t("adminProducts.countdownSaveErr"));
+    } finally {
+      setCountdownBusy(false);
+    }
+  }
+
+  async function saveCountdown() {
+    const a = countdownStartInput.trim();
+    const b = countdownEndInput.trim();
+    if (!a || !b) {
+      setCountdownErr(t("adminProducts.countdownInvalid"));
+      return;
+    }
+    const startD = new Date(a);
+    const endD = new Date(b);
+    if (Number.isNaN(startD.getTime()) || Number.isNaN(endD.getTime())) {
+      setCountdownErr(t("adminProducts.countdownInvalid"));
+      return;
+    }
+    if (startD.getTime() >= endD.getTime()) {
+      setCountdownErr(t("adminProducts.countdownInvalid"));
+      return;
+    }
+    await persistSaleWindow({
+      countdownStartsAt: startD.toISOString(),
+      countdownEndsAt: endD.toISOString(),
+    });
+  }
+
+  function clearCountdown() {
+    void persistSaleWindow({
+      countdownStartsAt: null,
+      countdownEndsAt: null,
+    });
+  }
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -387,6 +509,83 @@ export function AdminProductsEditor() {
           className="mt-2 text-white/65"
           dangerouslySetInnerHTML={{ __html: t("adminProducts.introP2") }}
         />
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-lulu-surface/50 p-4">
+        <h2
+          id="admin-countdown-section"
+          className="font-display text-sm font-semibold text-white"
+        >
+          {t("adminProducts.countdownLabel")}
+        </h2>
+        <p
+          className="mt-1 text-xs text-white/60"
+          dangerouslySetInnerHTML={{ __html: t("adminProducts.countdownHelp") }}
+        />
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label
+              htmlFor="admin-countdown-start"
+              className="mb-0.5 block text-xs text-white/60"
+            >
+              {t("adminProducts.countdownStart")}
+            </label>
+            <input
+              id="admin-countdown-start"
+              type="datetime-local"
+              value={countdownStartInput}
+              onChange={(e) => {
+                setCountdownStartInput(e.target.value);
+                setCountdownMsg(null);
+                setCountdownErr(null);
+              }}
+              className="w-full rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="admin-countdown-end"
+              className="mb-0.5 block text-xs text-white/60"
+            >
+              {t("adminProducts.countdownEnd")}
+            </label>
+            <input
+              id="admin-countdown-end"
+              type="datetime-local"
+              value={countdownEndInput}
+              onChange={(e) => {
+                setCountdownEndInput(e.target.value);
+                setCountdownMsg(null);
+                setCountdownErr(null);
+              }}
+              className="w-full rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
+            />
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={countdownBusy}
+            onClick={() => void saveCountdown()}
+            className="rounded-full bg-lulu-accent px-4 py-2 text-sm font-semibold text-lulu-bg hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {countdownBusy ? t("adminProducts.countdownSaving") : t("adminProducts.countdownSave")}
+          </button>
+          <button
+            type="button"
+            disabled={countdownBusy}
+            onClick={clearCountdown}
+            className="rounded-full border border-white/30 px-4 py-2 text-sm text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t("adminProducts.countdownClear")}
+          </button>
+        </div>
+        {countdownMsg ? (
+          <p className="mt-2 text-sm text-lulu-accent">{countdownMsg}</p>
+        ) : null}
+        {countdownErr ? (
+          <p className="mt-2 text-sm text-red-300">{countdownErr}</p>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-end gap-3">

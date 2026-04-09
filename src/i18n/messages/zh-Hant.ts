@@ -35,6 +35,10 @@ export const zhHant: Messages = {
     listTitle: "購物清單",
     listBlurb:
       '商品資料來自 Supabase 資料表 <code>foodlist</code>，請至「商品管理」編輯。',
+    countdownHeading: "限時優惠 — 距離結束尚餘",
+    countdownOpensHeading: "距離開始尚餘",
+    countdownRemaining:
+      "{{days}} 天 {{hours}} 時 {{minutes}} 分 {{seconds}} 秒",
   },
   productList: {
     loading: "載入商品中…",
@@ -51,6 +55,8 @@ export const zhHant: Messages = {
     soldOut: "已售完",
     soldOutBadge: "已售完",
     addToCart: "加入購物車",
+    addToCartClosed: "目前未開放",
+    outsideSaleWindow: "只有在設定的開賣時間內才能訂購。",
   },
   errors: {
     home: {
@@ -75,6 +81,7 @@ export const zhHant: Messages = {
       CITY_REQUIRED: "請填寫城鎮／城市。",
       INVALID_POSTCODE: "請輸入有效的英國郵遞區號。",
       INVALID_ADDRESS: "地址第二行過長。",
+      SALE_WINDOW_CLOSED: "目前非開賣時間，無法送出訂單。",
     },
     network: "網路錯誤，請稍後再試。",
     admin: {
@@ -106,6 +113,8 @@ export const zhHant: Messages = {
     remaining: "目前剩餘 {{n}}",
     subtotal: "小計",
     checkout: "前往結帳",
+    checkoutDisabledHint:
+      "非開賣時間無法結帳，您仍可查看購物車內容。",
     thanks: "感謝您的訂購！",
     thanksDetail:
       "我們已收到訂單並寫入資料庫，將依轉帳末五碼與您聯繫。",
@@ -144,6 +153,7 @@ export const zhHant: Messages = {
     premiseLoading: "載入地址清單中…",
     getaddressNote:
       "若要顯示完整門牌清單，請在伺服器環境變數設定 GETADDRESS_API_KEY（getAddress.io）。",
+    saleClosed: "目前非開賣時間，請於開賣時段再試。",
   },
   adminOrders: {
     pageTitle: "訂單管理",
@@ -218,5 +228,18 @@ export const zhHant: Messages = {
     done: "完成",
     delete: "刪除",
     dragLabel: "拖曳排序",
+    countdownLabel: "開賣時間窗（首頁）",
+    countdownStart: "開始時間（本地）",
+    countdownEnd: "結束時間（本地）",
+    countdownHelp:
+      "僅在此時間內顧客可加入購物車與結帳。資料存於 Supabase <code>site_settings</code>。清除兩者則不限時間。",
+    countdownSave: "儲存倒數",
+    countdownClear: "清除倒數",
+    countdownSaving: "儲存中…",
+    countdownOk: "已儲存倒數設定。",
+    countdownLoadErr: "無法載入倒數設定。",
+    countdownSaveErr: "無法儲存倒數。",
+    countdownInvalid:
+      "請同時填寫開始與結束，或使用清除；開始須早於結束。",
   },
 };

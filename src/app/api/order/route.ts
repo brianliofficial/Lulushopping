@@ -8,6 +8,8 @@ import {
   insertOrder,
   normalizeProductNameForMatch,
 } from "@/lib/orders-supabase";
+import { getSaleWindow } from "@/lib/site-settings-supabase";
+import { isShoppingAllowed } from "@/lib/sale-window";
 
 type Body = {
   customerName?: string;
@@ -104,6 +106,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Empty cart", code: "EMPTY_CART" },
       { status: 400 },
+    );
+  }
+
+  const w = await getSaleWindow();
+  if (!isShoppingAllowed(w.countdownStartsAt, w.countdownEndsAt, Date.now())) {
+    return NextResponse.json(
+      { error: "Sale is not open", code: "SALE_WINDOW_CLOSED" },
+      { status: 403 },
     );
   }
 

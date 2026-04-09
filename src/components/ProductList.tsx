@@ -11,6 +11,8 @@ type Props = {
   loading?: boolean;
   errorCode?: HomeErrorCode | null;
   configErrorCode?: HomeConfigErrorCode | null;
+  /** When false, add-to-cart is disabled (outside sale window). */
+  shoppingAllowed?: boolean;
 };
 
 export function ProductList({
@@ -18,6 +20,7 @@ export function ProductList({
   loading,
   errorCode,
   configErrorCode,
+  shoppingAllowed = true,
 }: Props) {
   const { addProduct } = useCart();
   const { t } = useI18n();
@@ -86,6 +89,7 @@ export function ProductList({
         const q = getQty(p.id);
         const max = p.maxQty;
         const soldOut = max < 1;
+        const addBlocked = soldOut || !shoppingAllowed;
         return (
           <li
             key={p.id}
@@ -134,7 +138,7 @@ export function ProductList({
                   min={1}
                   max={max}
                   value={soldOut ? 0 : q}
-                  disabled={soldOut}
+                  disabled={addBlocked}
                   onChange={(e) =>
                     setQty(
                       p.id,
@@ -149,13 +153,20 @@ export function ProductList({
                     : t("productList.remaining", { max })}
                 </span>
               </div>
+              {!shoppingAllowed && !soldOut ? (
+                <p className="text-xs text-amber-200/90">{t("productList.outsideSaleWindow")}</p>
+              ) : null}
               <button
                 type="button"
                 onClick={() => addProduct(p, q)}
-                disabled={soldOut}
+                disabled={addBlocked}
                 className="w-full rounded-full bg-lulu-accent py-3 text-sm font-semibold text-lulu-bg shadow transition hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lulu-accent"
               >
-                {soldOut ? t("productList.soldOut") : t("productList.addToCart")}
+                {soldOut
+                  ? t("productList.soldOut")
+                  : !shoppingAllowed
+                    ? t("productList.addToCartClosed")
+                    : t("productList.addToCart")}
               </button>
             </div>
           </li>

@@ -1,7 +1,10 @@
 # 需在 GitHub → Settings → Secrets and variables → Actions 設定：
 #   SUPABASE_URL（例：https://xxxxx.supabase.co，勿結尾斜線）
 #   SUPABASE_ANON_KEY（Dashboard → API → anon public）
-# 並在 Supabase 執行 supabase/migrations/004_rpc_ping.sql 建立 public.ping()
+# 建議再加（與站台讀取 foodlist 一致，可略過 RLS、確實讀到第一筆商品）：
+#   SUPABASE_SERVICE_ROLE_KEY（Dashboard → API → service_role；僅給此 workflow 用）
+#
+# 本作業改為 GET /rest/v1/foodlist?limit=1，不再依賴 public.ping() RPC。
 
 name: Supabase Keep Alive
 
@@ -14,25 +17,49 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase REST API
+      - name: Read first foodlist row (REST)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
-            echo "Missing SUPABASE_URL or SUPABASE_ANON_KEY in repository secrets."
+          if [ -z "${SUPABASE_URL:-}" ]; then
+            echo "Missing SUPABASE_URL in repository secrets."
             exit 1
           fi
-          url="${SUPABASE_URL%/}/rest/v1/rpc/ping"
-          code=$(curl -sS -o /tmp/ping_body -w "%{http_code}" -X POST \
-            -H "Content-Type: application/json" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-            -d "{}" \
-            "$url")
-          echo "HTTP ${code}"
-          if [ "$code" != "200" ]; then
-            cat /tmp/ping_body
+          if [ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            API_KEY="${SUPABASE_SERVICE_ROLE_KEY}"
+            KEY_KIND="service_role"
+          elif [ -n "${SUPABASE_ANON_KEY:-}" ]; then
+            API_KEY="${SUPABASE_ANON_KEY}"
+            KEY_KIND="anon"
+          else
+            echo "Missing SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY in repository secrets."
             exit 1
+          fi
+          base="${SUPABASE_URL%/}"
+          url="${base}/rest/v1/foodlist?select=id,sort_order&limit=1&order=sort_order.asc"
+          code=$(curl -sS -o /tmp/food_body -w "%{http_code}" \
+            -H "apikey: ${API_KEY}" \
+            -H "Authorization: Bearer ${API_KEY}" \
+            -H "Accept: application/json" \
+            "$url")
+          echo "HTTP ${code} (using ${KEY_KIND})"
+          cat /tmp/food_body
+          echo
+          if [ "$code" != "200" ]; then
+            exit 1
+          fi
+          rows=$(jq -r 'if type == "array" then length else -1 end' /tmp/food_body)
+          if [ "$rows" -lt 0 ]; then
+            echo "Unexpected JSON (expected array)."
+            exit 1
+          fi
+          if [ "$KEY_KIND" = "service_role" ] && [ "$rows" -eq 0 ]; then
+            echo "foodlist returned no rows with service_role — table may be empty or URL/key mismatch."
+            exit 1
+          fi
+          if [ "$KEY_KIND" = "anon" ] && [ "$rows" -eq 0 ]; then
+            echo "WARN: anon returned 0 rows (RLS often blocks). Add SUPABASE_SERVICE_ROLE_KEY secret to confirm foodlist has data."
           fi

@@ -9,6 +9,8 @@ import { isValidUkPostcodeFormat, normalizeUkPostcode } from "@/lib/postcode-uk"
 type Props = {
   onSuccess: () => void;
   onCancel: () => void;
+  /** When false, form cannot be submitted (sale outside configured window). */
+  checkoutDisabled?: boolean;
 };
 
 function resolveApiMessage(
@@ -25,7 +27,11 @@ function resolveApiMessage(
   return t("errors.order.GENERIC");
 }
 
-export function CheckoutForm({ onSuccess, onCancel }: Props) {
+export function CheckoutForm({
+  onSuccess,
+  onCancel,
+  checkoutDisabled = false,
+}: Props) {
   const { lines, subtotal, clear } = useCart();
   const { t } = useI18n();
   const [name, setName] = useState("");
@@ -165,6 +171,10 @@ export function CheckoutForm({ onSuccess, onCancel }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (checkoutDisabled) {
+      setError(t("checkout.saleClosed"));
+      return;
+    }
     if (lines.length === 0) {
       setError(t("checkout.clientEmptyCart"));
       return;
@@ -246,6 +256,14 @@ export function CheckoutForm({ onSuccess, onCancel }: Props) {
         {t("checkout.title")}
       </h3>
       <p className="text-sm text-white/70">{t("checkout.blurb")}</p>
+      {checkoutDisabled ? (
+        <p
+          className="rounded-lg border border-amber-500/40 bg-amber-950/35 p-3 text-sm text-amber-100"
+          role="alert"
+        >
+          {t("checkout.saleClosed")}
+        </p>
+      ) : null}
       <div>
         <label htmlFor="checkout-name" className="mb-1 block text-sm text-white/90">
           {t("checkout.name")}
@@ -449,7 +467,7 @@ export function CheckoutForm({ onSuccess, onCancel }: Props) {
         </button>
         <button
           type="submit"
-          disabled={submitting || lines.length === 0}
+          disabled={submitting || lines.length === 0 || checkoutDisabled}
           className="rounded-full bg-lulu-accent px-5 py-2 text-sm font-semibold text-lulu-bg shadow hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lulu-accent"
         >
           {submitting ? t("checkout.submitting") : t("checkout.submit")}

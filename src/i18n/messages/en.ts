@@ -33,6 +33,10 @@ export const en = {
     listTitle: "Shop",
     listBlurb:
       'Product data comes from the Supabase table <code>foodlist</code>. Edit items under "Products".',
+    countdownHeading: "Limited time — ends in",
+    countdownOpensHeading: "Opens in",
+    countdownRemaining:
+      "{{days}}d {{hours}}h {{minutes}}m {{seconds}}s",
   },
   productList: {
     loading: "Loading products…",
@@ -49,6 +53,9 @@ export const en = {
     soldOut: "Sold out",
     soldOutBadge: "Sold out",
     addToCart: "Add to cart",
+    addToCartClosed: "Not available yet",
+    outsideSaleWindow:
+      "Ordering is only available during the scheduled sale window.",
   },
   errors: {
     home: {
@@ -76,6 +83,8 @@ export const en = {
       CITY_REQUIRED: "Please enter town or city.",
       INVALID_POSTCODE: "Enter a valid UK postcode.",
       INVALID_ADDRESS: "Address line 2 is too long.",
+      SALE_WINDOW_CLOSED:
+        "Orders are not being accepted right now (outside the sale window).",
     },
     network: "Network error. Please try again.",
     admin: {
@@ -107,6 +116,8 @@ export const en = {
     remaining: "Remaining: {{n}}",
     subtotal: "Subtotal",
     checkout: "Checkout",
+    checkoutDisabledHint:
+      "Checkout is unavailable outside the scheduled sale hours. You can still review your cart.",
     thanks: "Thank you for your order!",
     thanksDetail:
       "We have received your order and will contact you using your transfer reference.",
@@ -145,6 +156,8 @@ export const en = {
     premiseLoading: "Loading addresses…",
     getaddressNote:
       "For a full address list from your postcode, add GETADDRESS_API_KEY (getAddress.io) in server environment variables.",
+    saleClosed:
+      "The sale is not open right now. Please come back during the scheduled window.",
   },
   adminOrders: {
     pageTitle: "Orders",
@@ -220,6 +233,19 @@ export const en = {
     done: "Done",
     delete: "Delete",
     dragLabel: "Drag to reorder",
+    countdownLabel: "Sale window (homepage)",
+    countdownStart: "Start (local time)",
+    countdownEnd: "End (local time)",
+    countdownHelp:
+      "During this window only, customers can add to cart and check out. Stored in Supabase <code>site_settings</code>. Clear both to allow ordering anytime.",
+    countdownSave: "Save countdown",
+    countdownClear: "Clear",
+    countdownSaving: "Saving…",
+    countdownOk: "Countdown saved.",
+    countdownLoadErr: "Could not load countdown setting.",
+    countdownSaveErr: "Could not save countdown.",
+    countdownInvalid:
+      "Enter both start and end, or use Clear. Start must be before end.",
   },
 };
 
