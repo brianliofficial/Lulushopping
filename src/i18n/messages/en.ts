@@ -13,6 +13,17 @@ export const en = {
     passwordPh: "Password",
     continue: "Continue",
   },
+  adminLogin: {
+    title: "Admin sign in",
+    subtitle: "Sign in with a Google account on the admin allow list.",
+    signInWithGoogle: "Sign in with Google",
+    errorAccessDenied: "Access denied. This account is not authorized.",
+    backHome: "Back to shop",
+  },
+  adminSession: {
+    signedInLabel: "Signed in",
+    signOut: "Sign out",
+  },
   language: {
     label: "Language",
     zh: "中文",
@@ -104,6 +115,7 @@ export const en = {
       EMPTY_PRODUCTS:
         "No valid products: each row needs a name, and the list cannot be all empty.",
       UNAUTHORIZED: "Unauthorized.",
+      FORBIDDEN: "This account is not allowed to use admin.",
       NO_ADMIN_SECRET:
         "Server admin password is not configured, or the password you entered is wrong.",
       MISSING_SUPABASE:
@@ -168,7 +180,7 @@ export const en = {
     pageTitle: "Orders",
     pageSubtitle:
       "Order data comes from the Supabase <code>orders</code> table.",
-    intro: "Enter your admin password and click Reload.",
+    intro: "After signing in with Google, click Reload to refresh the list.",
     adminPassword: "Admin password (enter and confirm)",
     passwordPh: "Type password, then Confirm",
     passwordConfirm: "Confirm",

@@ -1,17 +1,31 @@
-# 需在 GitHub → Settings → Secrets and variables → Actions 設定：
-#   SUPABASE_URL（例：https://xxxxx.supabase.co，勿結尾斜線）
-#   SUPABASE_ANON_KEY（Dashboard → API → anon public）
-# 建議再加（與站台讀取 foodlist 一致，可略過 RLS、確實讀到第一筆商品）：
-#   SUPABASE_SERVICE_ROLE_KEY（Dashboard → API → service_role；僅給此 workflow 用）
+# 避免 Supabase 免費專案因「長期無活動」被自動暫停（例如收到
+# "scheduled to be paused in a couple of days" 通知）。
+# 此 workflow 定期呼叫同一專案的 PostgREST，視為有使用紀錄。
 #
-# 本作業改為 GET /rest/v1/foodlist?limit=1，不再依賴 public.ping() RPC。
+# GitHub → 此 repo → Settings → Secrets and variables → Actions → New repository secret
+#
+# 必填其一組合：
+#   SUPABASE_URL
+#     例（你的 luluorder 專案 ref ortxxzozkndliywtejcw）：
+#     https://ortxxzozkndliywtejcw.supabase.co
+#     勿結尾斜線。
+#   與下列擇一：
+#     SUPABASE_ANON_KEY（Dashboard → Project Settings → API → anon public）
+#     或 SUPABASE_SERVICE_ROLE_KEY（同上 service_role，建議此 workflow 用 service_role
+#     可穩定讀到 foodlist；請勿洩漏、勿 commit）
+#
+# 手動測：Actions 分頁 → Supabase Keep Alive → Run workflow
 
 name: Supabase Keep Alive
 
 on:
   schedule:
-    - cron: "0 9 * * *"
+    # 每天兩次 UTC（可依需要改頻率）
+    - cron: "30 9,21 * * *"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   ping:
@@ -57,9 +71,8 @@ jobs:
             exit 1
           fi
           if [ "$KEY_KIND" = "service_role" ] && [ "$rows" -eq 0 ]; then
-            echo "foodlist returned no rows with service_role — table may be empty or URL/key mismatch."
-            exit 1
+            echo "Note: foodlist is empty (still counts as API activity for keep-alive)."
           fi
           if [ "$KEY_KIND" = "anon" ] && [ "$rows" -eq 0 ]; then
-            echo "WARN: anon returned 0 rows (RLS often blocks). Add SUPABASE_SERVICE_ROLE_KEY secret to confirm foodlist has data."
+            echo "WARN: anon returned 0 rows (RLS often blocks table reads). Request still counts as activity; add SUPABASE_SERVICE_ROLE_KEY to verify data is readable."
           fi

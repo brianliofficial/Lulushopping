@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminWriteErrorResponse, assertAdminWrite } from "@/lib/admin-auth";
+import { adminAccessErrorResponse, assertAdminAccess } from "@/lib/admin-auth";
 import { updateOrderStatus } from "@/lib/orders-supabase";
 
 export async function PATCH(
@@ -7,10 +7,10 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    assertAdminWrite(request);
+    await assertAdminAccess();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
-    const res = adminWriteErrorResponse(msg);
+    const res = adminAccessErrorResponse(msg);
     if (res) return res;
     throw e;
   }

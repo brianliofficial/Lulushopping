@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminWriteErrorResponse, assertAdminWrite } from "@/lib/admin-auth";
+import { adminAccessErrorResponse, assertAdminAccess } from "@/lib/admin-auth";
 import {
   fetchFoodlistProducts,
   replaceFoodlist,
@@ -41,10 +41,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    assertAdminWrite(request);
+    await assertAdminAccess();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
-    const res = adminWriteErrorResponse(msg);
+    const res = adminAccessErrorResponse(msg);
     if (res) return res;
     throw e;
   }

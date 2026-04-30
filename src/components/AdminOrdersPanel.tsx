@@ -1,16 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { signOut, useSession } from "next-auth/react";
+import { useCallback, useEffect, useState } from "react";
 import type { OrderLinePayload } from "@/lib/types";
 import type { OrderRow } from "@/lib/orders-supabase";
-import { useAdminSecret } from "@/components/AdminAuthProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -49,35 +43,16 @@ export function AdminOrdersPanel() {
   const { t, locale } = useI18n();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const { adminSecret, setAdminSecret } = useAdminSecret();
-  const secretRef = useRef(adminSecret);
-  secretRef.current = adminSecret;
+  const { data: session } = useSession();
 
   const [err, setErr] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
-  const [pwdDraft, setPwdDraft] = useState("");
-  const [pwdLocked, setPwdLocked] = useState(false);
-
-  useLayoutEffect(() => {
-    if (adminSecret.trim()) setPwdLocked(true);
-  }, [adminSecret]);
-
-  const authHeaders = useCallback((): HeadersInit => {
-    const h: HeadersInit = {};
-    const s = secretRef.current.trim();
-    if (s) {
-      h.Authorization = `Bearer ${s}`;
-    }
-    return h;
-  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
-      const res = await fetch("/api/admin/orders", {
-        headers: authHeaders(),
-      });
+      const res = await fetch("/api/admin/orders");
       const data = (await res.json().catch(() => ({}))) as {
         orders?: OrderRow[];
         error?: string;
@@ -95,7 +70,7 @@ export function AdminOrdersPanel() {
     } finally {
       setLoading(false);
     }
-  }, [authHeaders, t]);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -109,7 +84,6 @@ export function AdminOrdersPanel() {
     try {
       const res = await fetch("/api/admin/orders", {
         method: "DELETE",
-        headers: authHeaders(),
       });
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -133,10 +107,7 @@ export function AdminOrdersPanel() {
     try {
       const res = await fetch(`/api/admin/orders/${id}`, {
         method: "PATCH",
-        headers: {
-          ...authHeaders(),
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paid }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -161,10 +132,7 @@ export function AdminOrdersPanel() {
     try {
       const res = await fetch(`/api/admin/orders/${id}`, {
         method: "PATCH",
-        headers: {
-          ...authHeaders(),
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ picked_up }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -233,55 +201,19 @@ export function AdminOrdersPanel() {
       </div>
 
       <div className="w-full rounded-lg border border-white/10 bg-lulu-surface/30 p-3">
-        <label htmlFor="orders-admin-secret" className="mb-0.5 block text-xs text-white/60">
-          {t("adminOrders.adminPassword")}
-        </label>
-        {pwdLocked ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <p
-              id="orders-admin-secret"
-              className="flex-1 rounded-lg border border-white/15 bg-lulu-bg/50 px-2 py-2 text-sm text-white/50"
-            >
-              {t("adminOrders.passwordLockedMask")}
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setPwdLocked(false);
-                setPwdDraft("");
-              }}
-              className="shrink-0 rounded-full border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10"
-            >
-              {t("adminOrders.passwordChange")}
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-wrap items-end gap-2">
-            <input
-              id="orders-admin-secret"
-              type="password"
-              autoComplete="off"
-              value={pwdDraft}
-              onChange={(e) => setPwdDraft(e.target.value)}
-              className="min-w-[140px] flex-1 rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
-              placeholder={t("adminOrders.passwordPh")}
-            />
-            <button
-              type="button"
-              disabled={!pwdDraft.trim()}
-              onClick={() => {
-                const v = pwdDraft.trim();
-                if (!v) return;
-                setAdminSecret(v);
-                setPwdLocked(true);
-                setPwdDraft("");
-              }}
-              className="rounded-full bg-lulu-accent px-4 py-1.5 text-xs font-semibold text-lulu-bg hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t("adminOrders.passwordConfirm")}
-            </button>
-          </div>
-        )}
+        <p className="mb-0.5 text-xs text-white/60">{t("adminSession.signedInLabel")}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="min-w-0 break-all text-sm text-white/90">
+            {session?.user?.email ?? "—"}
+          </p>
+          <button
+            type="button"
+            onClick={() => void signOut({ callbackUrl: "/admin/login" })}
+            className="shrink-0 rounded-full border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+          >
+            {t("adminSession.signOut")}
+          </button>
+        </div>
       </div>
 
       {err ? (

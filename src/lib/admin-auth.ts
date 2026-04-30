@@ -1,32 +1,28 @@
-/** 後台寫入／訂單管理 API：正式環境需 Authorization: Bearer（值同 PRODUCTS_ADMIN_SECRET） */
-export function assertAdminWrite(request: Request): void {
-  if (process.env.NODE_ENV === "development") return;
-  const secret = process.env.PRODUCTS_ADMIN_SECRET;
-  if (!secret) {
-    throw new Error("NO_ADMIN_SECRET");
+import { auth } from "@/auth";
+import { isAdminEmail } from "@/lib/admin-allowlist";
+
+/** 管理 API：需已登入且 email 在 ADMIN_EMAIL_ALLOWLIST */
+export async function assertAdminAccess(): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.email) {
+    throw new Error("UNAUTHORIZED");
   }
-  const auth = request.headers.get("authorization");
-  const token = auth?.startsWith("Bearer ") ? auth.slice(7).trim() : "";
-  if (token !== secret) {
+  if (!isAdminEmail(session.user.email)) {
     throw new Error("FORBIDDEN");
   }
 }
 
-export function adminWriteErrorResponse(msg: string) {
-  if (msg === "NO_ADMIN_SECRET") {
+export function adminAccessErrorResponse(msg: string) {
+  if (msg === "UNAUTHORIZED") {
     return Response.json(
-      {
-        error:
-          "正式環境請設定 PRODUCTS_ADMIN_SECRET，並在管理頁輸入相同密碼。",
-        code: "NO_ADMIN_SECRET",
-      },
-      { status: 503 },
+      { error: "需要登入", code: "UNAUTHORIZED" },
+      { status: 401 },
     );
   }
   if (msg === "FORBIDDEN") {
     return Response.json(
-      { error: "未授權", code: "UNAUTHORIZED" },
-      { status: 401 },
+      { error: "未授權", code: "FORBIDDEN" },
+      { status: 403 },
     );
   }
   return null;

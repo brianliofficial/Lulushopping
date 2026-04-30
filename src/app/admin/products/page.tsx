@@ -1,4 +1,3 @@
-import { AdminAuthProvider } from "@/components/AdminAuthProvider";
 import { AdminProductsEditor } from "@/components/AdminProductsEditor";
 
 export const metadata = {
@@ -10,9 +9,7 @@ export default function AdminProductsPage() {
   return (
     <div className="min-h-full bg-lulu-bg">
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <AdminAuthProvider>
-          <AdminProductsEditor />
-        </AdminAuthProvider>
+        <AdminProductsEditor />
       </main>
     </div>
   );

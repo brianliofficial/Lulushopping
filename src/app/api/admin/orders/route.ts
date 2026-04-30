@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { adminWriteErrorResponse, assertAdminWrite } from "@/lib/admin-auth";
+import { adminAccessErrorResponse, assertAdminAccess } from "@/lib/admin-auth";
 import { deleteAllOrders, fetchOrdersList } from "@/lib/orders-supabase";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    assertAdminWrite(request);
+    await assertAdminAccess();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
-    const res = adminWriteErrorResponse(msg);
+    const res = adminAccessErrorResponse(msg);
     if (res) return res;
     throw e;
   }
@@ -31,12 +31,12 @@ export async function GET(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   try {
-    assertAdminWrite(request);
+    await assertAdminAccess();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
-    const res = adminWriteErrorResponse(msg);
+    const res = adminAccessErrorResponse(msg);
     if (res) return res;
     throw e;
   }

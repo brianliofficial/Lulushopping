@@ -18,15 +18,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { signOut, useSession } from "next-auth/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
-import { useAdminSecret } from "@/components/AdminAuthProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -265,14 +259,8 @@ export function AdminProductsEditor() {
   const [loading, setLoading] = useState(true);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveErr, setSaveErr] = useState<string | null>(null);
-  const { adminSecret, setAdminSecret } = useAdminSecret();
-  const [pwdDraft, setPwdDraft] = useState("");
-  const [pwdLocked, setPwdLocked] = useState(false);
+  const { data: session, status: sessionStatus } = useSession();
   const [saving, setSaving] = useState(false);
-
-  useLayoutEffect(() => {
-    if (adminSecret.trim()) setPwdLocked(true);
-  }, [adminSecret]);
   const [countdownStartInput, setCountdownStartInput] = useState("");
   const [countdownEndInput, setCountdownEndInput] = useState("");
   const [countdownBusy, setCountdownBusy] = useState(false);
@@ -314,15 +302,11 @@ export function AdminProductsEditor() {
   }, [load]);
 
   useEffect(() => {
-    if (!adminSecret.trim()) return;
+    if (sessionStatus !== "authenticated") return;
     let cancelled = false;
     (async () => {
       try {
-        const headers: HeadersInit = {};
-        if (adminSecret.trim()) {
-          headers.Authorization = `Bearer ${adminSecret.trim()}`;
-        }
-        const res = await fetch("/api/admin/site-settings", { headers });
+        const res = await fetch("/api/admin/site-settings");
         const data = (await res.json().catch(() => ({}))) as {
           countdownStartsAt?: string | null;
           countdownEndsAt?: string | null;
@@ -350,7 +334,7 @@ export function AdminProductsEditor() {
     return () => {
       cancelled = true;
     };
-  }, [adminSecret, t]);
+  }, [sessionStatus, t]);
 
   async function persistSaleWindow(payload: {
     countdownStartsAt: string | null;
@@ -359,14 +343,10 @@ export function AdminProductsEditor() {
     setCountdownBusy(true);
     setCountdownMsg(null);
     setCountdownErr(null);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (adminSecret.trim()) {
-      headers.Authorization = `Bearer ${adminSecret.trim()}`;
-    }
     try {
       const res = await fetch("/api/admin/site-settings", {
         method: "PATCH",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -471,14 +451,10 @@ export function AdminProductsEditor() {
     setSaveMsg(null);
     setSaveErr(null);
     setSaving(true);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (adminSecret.trim()) {
-      headers.Authorization = `Bearer ${adminSecret.trim()}`;
-    }
     try {
       const res = await fetch("/api/products", {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ products: list }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -661,55 +637,19 @@ export function AdminProductsEditor() {
       </div>
 
       <div className="w-full rounded-lg border border-white/10 bg-lulu-surface/30 p-3">
-        <label htmlFor="admin-secret" className="mb-0.5 block text-xs text-white/60">
-          {t("adminProducts.adminPassword")}
-        </label>
-        {pwdLocked ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <p
-              id="admin-secret"
-              className="flex-1 rounded-lg border border-white/15 bg-lulu-bg/50 px-2 py-2 text-sm text-white/50"
-            >
-              {t("adminProducts.passwordLockedMask")}
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setPwdLocked(false);
-                setPwdDraft("");
-              }}
-              className="shrink-0 rounded-full border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10"
-            >
-              {t("adminProducts.passwordChange")}
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-wrap items-end gap-2">
-            <input
-              id="admin-secret"
-              type="password"
-              autoComplete="off"
-              value={pwdDraft}
-              onChange={(e) => setPwdDraft(e.target.value)}
-              className="min-w-[140px] flex-1 rounded-lg border border-white/20 bg-lulu-bg px-2 py-1.5 text-sm text-white"
-              placeholder={t("adminProducts.passwordPh")}
-            />
-            <button
-              type="button"
-              disabled={!pwdDraft.trim()}
-              onClick={() => {
-                const v = pwdDraft.trim();
-                if (!v) return;
-                setAdminSecret(v);
-                setPwdLocked(true);
-                setPwdDraft("");
-              }}
-              className="rounded-full bg-lulu-accent px-4 py-1.5 text-xs font-semibold text-lulu-bg hover:bg-lulu-accent-muted disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t("adminProducts.passwordConfirm")}
-            </button>
-          </div>
-        )}
+        <p className="mb-0.5 text-xs text-white/60">{t("adminSession.signedInLabel")}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="min-w-0 break-all text-sm text-white/90">
+            {session?.user?.email ?? "—"}
+          </p>
+          <button
+            type="button"
+            onClick={() => void signOut({ callbackUrl: "/admin/login" })}
+            className="shrink-0 rounded-full border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+          >
+            {t("adminSession.signOut")}
+          </button>
+        </div>
       </div>
 
       {draft ? (

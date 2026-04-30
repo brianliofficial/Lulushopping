@@ -15,6 +15,17 @@ export const zhHant: Messages = {
     passwordPh: "密碼",
     continue: "繼續",
   },
+  adminLogin: {
+    title: "管理後台登入",
+    subtitle: "請使用已在白名單內的 Google 帳號登入。",
+    signInWithGoogle: "使用 Google 登入",
+    errorAccessDenied: "無法登入：此帳號未獲授權。",
+    backHome: "回首頁賣場",
+  },
+  adminSession: {
+    signedInLabel: "目前登入",
+    signOut: "登出",
+  },
   language: {
     label: "語言",
     zh: "中文",
@@ -101,6 +112,7 @@ export const zhHant: Messages = {
       EMPTY_PRODUCTS:
         "沒有有效商品：每一筆都需填「商品名稱」，且不可全部為空。",
       UNAUTHORIZED: "未授權。",
+      FORBIDDEN: "此帳號未獲後台授權。",
       NO_ADMIN_SECRET: "伺服器尚未設定管理密碼，或管理頁密碼不正確。",
       MISSING_SUPABASE:
         "請設定 NEXT_PUBLIC_SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY（本機：.env.local；Vercel：Project → Settings → Environment Variables）。",
@@ -163,7 +175,7 @@ export const zhHant: Messages = {
     pageTitle: "訂單管理",
     pageSubtitle:
       '訂單資料來自 Supabase 資料表 <code>orders</code>。',
-    intro: "請輸入管理密碼後按「重新載入」。",
+    intro: "使用 Google 登入後，按「重新載入」更新列表。",
     adminPassword: "管理密碼（請輸入後按確認）",
     passwordPh: "輸入後按「確認」",
     passwordConfirm: "確認",
